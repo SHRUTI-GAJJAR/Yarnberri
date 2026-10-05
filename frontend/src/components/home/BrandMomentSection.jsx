@@ -23,7 +23,7 @@ export default function BrandMomentSection() {
             </p>
             <a
               className="yb-btn yb-btn-pink"
-              href="https://www.instagram.com/_crochet.by.shruti_/"
+              href="https://www.instagram.com/_yarnberri_/"
               target="_blank"
               rel="noopener noreferrer"
             >

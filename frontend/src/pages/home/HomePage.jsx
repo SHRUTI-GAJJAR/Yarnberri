@@ -7,7 +7,7 @@ import WhyYarnberri from '../../components/home/WhyYarnberri';
 import BrandMomentSection from '../../components/home/BrandMomentSection';
 import BrandCTA from '../../components/home/BrandCTA';
 
-const INSTAGRAM_URL = 'https://www.instagram.com/_crochet.by.shruti_/';
+const INSTAGRAM_URL = 'https://www.instagram.com/_yarnberri_/';
 const WHATSAPP_NUMBER = '';
 // TODO: Replace this placeholder with the real Yarnberri WhatsApp number when available.
 const WHATSAPP_URL = WHATSAPP_NUMBER ? `https://wa.me/${WHATSAPP_NUMBER}` : '#';

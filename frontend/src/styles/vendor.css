@@ -1,0 +1,43 @@
+/* =========================================
+   Third-party CSS, in cascade layers
+   =========================================
+   WHY THIS FILE EXISTS
+
+   Bootstrap 5.3 marks its layout utilities `!important`:
+
+       .border  { border: ... !important }
+       .p-3     { padding: 1rem !important }
+       .p-4     { padding: 1.5rem !important }
+
+   An `!important` declaration in the author origin beats a normal
+   declaration no matter which stylesheet is imported last, so simply
+   reordering the imports is NOT enough - Bootstrap would silently win
+   every time it shares a class name with a Tailwind utility, and the
+   shadcn components would render with Bootstrap's larger spacing and
+   Bootstrap's grey border colour.
+
+   Cascade layers are resolved BEFORE specificity and importance, so
+   putting Bootstrap in a lower layer hands those class names back to
+   Tailwind. The layer order is declared first, then both vendors are
+   imported into their layer.
+
+   RESULTING PRIORITY (low to high):
+
+       @layer bootstrap      Bootstrap reboot, grid, toasts, spinner
+       @layer tailwind       Tailwind base / components / utilities
+       (unlayered)           globals.css, crochet.css  <- brand layer
+
+   globals.css and crochet.css are deliberately NOT in any layer.
+   Unlayered styles sit above every named layer, so the whole
+   `yb-*` design system keeps winning exactly as it did before any of
+   this existed.
+
+   Tailwind's preflight is disabled in tailwind.config.js, so
+   `@tailwind base` emits nothing and Bootstrap's reboot keeps owning
+   element defaults (headings, lists, links) as it always has.
+   ========================================= */
+
+@layer bootstrap, tailwind;
+
+@import "bootstrap/dist/css/bootstrap.min.css" layer(bootstrap);
+@import "./tailwind.css" layer(tailwind);

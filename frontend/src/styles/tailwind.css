@@ -1,0 +1,35 @@
+/* =========================================
+   Tailwind CSS entry point
+   =========================================
+   Tailwind is installed and wired into PostCSS, but it had no
+   `@tailwind` directive anywhere in the project, so PostCSS never emitted
+   a single utility class. That is why `npx shadcn@latest init` reported
+   "No Tailwind CSS configuration found".
+
+   IMPORT ORDER MATTERS - see main.jsx. This file is imported BEFORE
+   Bootstrap on purpose:
+
+     1. tailwind.css   preflight baseline + every utility class
+     2. bootstrap      grid, toasts, spinner, form reboot
+     3. globals.css    brand tokens, fonts, yb-* resets
+     4. crochet.css    all component styling
+
+   Two reasons for that order:
+
+   - Preflight supplies the baseline shadcn components assume
+     (`*, ::before, ::after { border: 0 solid }`, `list-style: none`,
+     `border-collapse: collapse`). Those resets have to be in the sheet
+     before anything else layers on top of them.
+
+   - globals.css and crochet.css must stay AFTER Bootstrap. globals.css
+     sets `a { color: inherit; text-decoration: none }` and the Playfair
+     Display heading stack; Bootstrap's reboot would win over both if it
+     were imported after them.
+
+   `crochet.css` is the brand layer and is imported last so every existing
+   `yb-*` rule keeps winning exactly as it does today.
+   ========================================= */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

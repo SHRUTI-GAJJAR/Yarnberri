@@ -5753,11 +5753,18 @@ button:focus-visible {
     max-width: 25%;
   }
 
-  /* Six categories read better as two clean rows of three. */
-  .yb-home-page .yb-category-section .row > [class*="col-"] {
-    flex: 0 0 33.3333%;
-    width: 33.3333%;
-    max-width: 33.3333%;
+  /* The split-layer category grid is a six-across single row driven by
+     --yb-card-max and --yb-grid-gap, so it opts out of the fixed-percentage
+     columns the two sections above use. Without this, `flex: 0 0 33.3333%`
+     would force three per row with flex-shrink: 0, and six cards would overflow
+     the container and be cut off at the viewport edge.
+
+     Kept inside this min-width block on purpose: the cap still applies at every
+     width, but below 1024px the wrapper simply shrinks to fit. */
+  .yb-home-page .yb-category-section .yb-category-split-grid > [class*="col-"] {
+    flex: 1 1 0;
+    width: auto;
+    max-width: var(--yb-card-max);
   }
 }
 
@@ -6024,8 +6031,31 @@ button:focus-visible {
    ========================================= */
 
 .yb-category-split-shell {
-  --yb-split-x: 1.25rem;
-  --yb-split-y: 3.5rem;
+  /* Largest card the grid will render. Applied as the COLUMN's `max-width`, so
+     it caps the whole card while still allowing the column to SHRINK below it
+     when the viewport is too narrow for six cards plus the gap.
+
+     The vw term is what guarantees all six fit: it tracks the container rather
+     than being a fixed pixel value, so on a narrow screen the ceiling drops
+     before the row can overflow, and on a wide one it stops the cards growing
+     past the size the composition was designed at. The px term is the ceiling
+     itself - lower it for smaller cards, raise it for larger, and nothing else
+     needs to change. */
+  --yb-card-max: clamp(96px, 12.5vw, 180px);
+  /* Space between neighbouring cards. THE adjustable gap: raise it to spread
+     the row out, lower it to tighten it. Because the row fills the container
+     and the columns absorb whatever space is left over, this stays the exact
+     distance between cards at every viewport.
+
+     Keep it >= 2 x --yb-split-x, or a hovered card's artwork will slide into
+     its neighbour's name panel. */
+  --yb-grid-gap: 1.75rem;
+  /* The travel is deliberately short. The point of the split is to uncover the
+     name, not to throw the two panels across the section, so these stay small
+     enough that the composition still reads as ONE card that opened rather than
+     two cards drifting apart. */
+  --yb-split-x: 0.5rem;
+  --yb-split-y: 1.5rem;
   /* Resting gap between two neighbouring cards. Because both panels are
      `inset: 0`, they fill their column exactly, so the visible gap IS the
      column gutter - this value is half the gutter set on the columns below.
@@ -6045,23 +6075,58 @@ button:focus-visible {
   padding-bottom: var(--yb-split-y);
 }
 
-/* Bootstrap rows space with `margin-top` on the columns, so the extra room the
-   travelling panels need has to be added there rather than via `row-gap`. */
-.yb-category-split-grid > [class*="col-"] {
+/* --- The grid: ONE horizontal line, spacing driven by the gap ------------- */
+
+/* Bootstrap's grid is dropped here in favour of a flex row, because fixed
+   percentage columns cannot guarantee a single line: `col-lg-2` hands each card
+   a 1/6 slice of the container, so the leftover space in every column pushed
+   the row apart and it wrapped.
+
+   `flex-wrap: nowrap` is what keeps all six on one line, and the row is
+   `width: 100%` with NO derived max-width. An earlier version derived the row
+   width from the card and the gap, which is what made six cards plus five gaps
+   overflow the container whenever the viewport was narrower than that total.
+   Letting the row simply fill the container means it can never overflow: the
+   columns shrink instead.
+
+   `column-gap` is the single adjustable spacing value between neighbours. */
+.yb-category-section .yb-category-split-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: 100%;
+  column-gap: var(--yb-grid-gap);
+  row-gap: 0;
+}
+
+/* Each wrapper is capped at one card's width, not the card itself. That
+   distinction is the whole layout: capping the COLUMN means a column is never
+   wider than its card, so there is no leftover space inside a column to read as
+   extra gap, and `column-gap` stays the true distance between neighbours. If
+   the cap were on the card, every unused slice of column would appear as
+   padding around the card and the row would look loosely scattered.
+
+   `flex-basis: 0` plus `flex-grow: 1` makes the six share the row evenly, and
+   `min-width: 0` is required or the card's intrinsic width would stop them
+   shrinking. Bootstrap's gutter margins and inline padding are both cleared,
+   since `column-gap` is now the only thing spacing the cards. */
+/* Scoped through `.yb-category-section` as well, because other rules in this
+   file target `.yb-category-section .row > [class*="col-"]` with fixed
+   percentages. Matching that specificity here means the six-across layout holds
+   regardless of which rule is declared last. */
+.yb-category-section .yb-category-split-grid > [class*="col-"] {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: var(--yb-card-max);
+  width: auto;
+  margin-inline: 0;
+  padding-inline: 0;
+  /* Vertical room for the travelling panels. Bootstrap's own `g-4` would only
+     give a flat 1.5rem, which is not enough once a name panel drops. */
   margin-top: calc(1.5rem + var(--yb-split-y));
 }
 
-/* The horizontal gutter is ours, not Bootstrap's: the two panels fill the
-   column (they are `inset: 0`), so a column's inline padding on BOTH sides is
-   what opens the gap between two neighbouring cards. Each column therefore
-   contributes half of --yb-card-gap. Overrides `g-4`'s 1.5rem, which was set
-   before the cards had panels that travel sideways. */
-.yb-category-split-grid > [class*="col-"] {
-  padding-inline: calc(var(--yb-card-gap) / 2);
-}
-
-/* --- The card: a positioning context and nothing else ------------------ */
-
+/* The card fills its column exactly, so it needs no cap of its own. */
 .yb-category-split-card {
   position: relative;
   display: block;
@@ -6072,6 +6137,12 @@ button:focus-visible {
   isolation: isolate;
 }
 
+/* --- The card: a positioning context and nothing else ------------------ */
+
+/* Both panels are `inset: 0` against this box, so the card shrinking with its
+   column shrinks the artwork and the name panel together, and the split
+   distance stays exactly as authored. */
+
 /* --- Both panels: the identical box, one on top of the other ------------ */
 
 .yb-category-split-card__image,
@@ -6081,12 +6152,14 @@ button:focus-visible {
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  /* Square corners, identical on both panels so front and back match. */
+  border-radius: 0;
   transition: transform 0.5s ease-in-out;
 }
 
 /* --- Front layer: artwork panel ---------------------------------------- */
 
+/* Both panels are square: the artwork panel and the name panel match. */
 .yb-category-split-card__image {
   z-index: 2;
   display: flex;
@@ -6100,9 +6173,9 @@ button:focus-visible {
   background-image:
     radial-gradient(92% 70% at 50% 20%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 68%),
     linear-gradient(152deg, rgba(253, 231, 239, 0.85) 0%, rgba(255, 244, 234, 0.75) 46%, rgba(232, 239, 223, 0.8) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 8px 20px rgba(90, 61, 53, 0.09);
+  /* No shadow: a cast shadow makes the panel look like a lifted screenshot
+     rather than artwork sitting in the page. */
+  box-shadow: none;
 }
 
 /* Transparent artwork must never be cropped. */
@@ -6136,16 +6209,98 @@ button:focus-visible {
 
 /* The name is the only thing the split reveals. It sits at the foot of the
    panel, matching the reference composition, and is never taller than the
-   space a two-line title needs. */
+   space a two-line title needs.
+
+   The underline is the link signal: it draws itself from the centre outward on
+   hover/focus, so the row reads as "this goes somewhere" the same way the split
+   does. `text-decoration` would sit under the trailing arrow glyph as well and
+   cannot animate, so the line is a pseudo-element scaled on the x-axis instead.
+   It is a child of the <h3> rather than of the card, so the title keeps owning
+   its own decoration and no other rule in this file can reach it. */
 .yb-category-split-card__title {
+  position: relative;
   margin: 0;
+  padding-bottom: 2px;
   color: var(--yb-brown);
   font-family: "Playfair Display", serif;
-  font-size: 1.05rem;
+  /* Scaled against the card, not the viewport: the cards shrank, so a fixed rem
+     size no longer sits correctly in the panel and a two-line name like "Hair
+     Accessories" stops fitting. One `em`-based value tracks --yb-card-max
+     automatically and needs no per-breakpoint override. */
+  font-size: clamp(0.62rem, 0.95cqw, 0.82rem);
   font-weight: 600;
   line-height: 1.16;
   letter-spacing: -0.01em;
   text-align: center;
+  transition: color 0.35s ease-in-out;
+}
+
+/* Container query context: `cqw` above resolves against the card, not the
+   viewport, which is what lets the name shrink with the card. */
+.yb-category-split-card {
+  container-type: inline-size;
+}
+
+.yb-category-split-card__title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  /* Collapsed at rest, then drawn from the middle outwards. `transform` only, so
+     it never reflows the title. */
+  transform: scaleX(0);
+  transition: transform 0.35s ease-in-out;
+}
+
+/* Hover-capable devices: the underline draws in and the name warms slightly. */
+@media (hover: hover) and (pointer: fine) {
+  .yb-category-split-card:hover .yb-category-split-card__title::after,
+  .yb-category-split-card:focus-visible .yb-category-split-card__title::after {
+    transform: scaleX(1);
+  }
+
+  .yb-category-split-card:hover .yb-category-split-card__title,
+  .yb-category-split-card:focus-visible .yb-category-split-card__title {
+    color: var(--yb-green);
+  }
+}
+
+/* Touch never hovers, and the panels stay parked apart there, so the underline
+   is drawn permanently - otherwise a phone user would get no link signal at
+   all. */
+@media (hover: none), (pointer: coarse) {
+  .yb-category-split-card__title::after {
+    transform: scaleX(1);
+  }
+}
+
+/* --- The cue: what the split is for --------------------------------------- */
+
+/* The content panel carries the category name and nothing that describes the
+   product. The arrow trails the name INSIDE the title so the line reads as one
+   piece of link text - "Crochet Flowers ->" - rather than a name with a separate
+   badge parked in a corner. It is sized in `em`, so it tracks the title's own
+   font-size at every breakpoint with no per-width overrides. */
+.yb-category-split-card__cue {
+  display: inline-block;
+  width: 0.82em;
+  height: 0.82em;
+  margin-left: 0.3em;
+  vertical-align: -0.05em;
+  color: var(--yb-brown-light);
+  transition: transform 0.35s ease-in-out;
+}
+
+/* A one-step nudge on hover/focus, so the arrow reads as the live end of the
+   link without the name or the panels moving. */
+@media (hover: hover) and (pointer: fine) {
+  .yb-category-split-card:hover .yb-category-split-card__cue,
+  .yb-category-split-card:focus-visible .yb-category-split-card__cue {
+    transform: translate3d(2px, 0, 0);
+  }
 }
 
 /* --- Type and icon scale with the card, not with the viewport -------------
@@ -6153,13 +6308,11 @@ button:focus-visible {
    that size the base 1.05rem name and the 54px lucide icon no longer fit
    inside the panel, so both step down. Only sizes change here - the split, the
    gap and the travel are untouched. */
+/* The name's size now scales off the card via container queries, so only the
+   panel padding and the icon still step down per width. */
 @media (min-width: 1200px) {
   .yb-category-split-card__content {
     padding: 0 10px 12px;
-  }
-
-  .yb-category-split-card__title {
-    font-size: 0.92rem;
   }
 
   /* Overrides the icon's width/height attributes. */
@@ -6172,11 +6325,6 @@ button:focus-visible {
 @media (min-width: 992px) and (max-width: 1199.98px) {
   .yb-category-split-card__content {
     padding: 0 8px 10px;
-  }
-
-  .yb-category-split-card__title {
-    font-size: 0.82rem;
-    line-height: 1.1;
   }
 
   .yb-category-split-card__fallback {
@@ -6236,17 +6384,21 @@ button:focus-visible {
    leg is bounded by the row spacing instead. */
 @media (max-width: 1199.98px) {
   .yb-category-split-shell {
+    --yb-card-max: clamp(88px, 13vw, 132px);
+    --yb-grid-gap: 1.5rem;
     --yb-card-gap: 2.25rem;
-    --yb-split-x: 1.125rem;
-    --yb-split-y: 2.75rem;
+    --yb-split-x: 0.5rem;
+    --yb-split-y: 1.375rem;
   }
 }
 
 @media (max-width: 991.98px) {
   .yb-category-split-shell {
+    --yb-card-max: clamp(74px, 15vw, 116px);
+    --yb-grid-gap: 1.125rem;
     --yb-card-gap: 2rem;
-    --yb-split-x: 1rem;
-    --yb-split-y: 2.25rem;
+    --yb-split-x: 0.375rem;
+    --yb-split-y: 1.25rem;
   }
 }
 
@@ -6254,9 +6406,11 @@ button:focus-visible {
    only the vertical leg matters. */
 @media (max-width: 767.98px) {
   .yb-category-split-shell {
+    --yb-card-max: clamp(60px, 16vw, 98px);
+    --yb-grid-gap: 0.875rem;
     --yb-card-gap: 1.5rem;
     --yb-split-x: 0px;
-    --yb-split-y: 1.75rem;
+    --yb-split-y: 1rem;
   }
 }
 
@@ -6267,19 +6421,15 @@ button:focus-visible {
     /* x is already 0 from the single-column breakpoint; restated so the
        "vertical split" intent survives if that breakpoint moves. */
     --yb-split-x: 0px;
-    --yb-split-y: 3rem;
-  }
-
-  .yb-category-split-card__title {
-    font-size: 0.98rem;
+    --yb-split-y: 1.5rem;
   }
 }
 
 /* Landscape phones: the section padding collapses to 32px, which is less than
-   a 3rem travel, so shorten the split to match. */
+   the vertical travel, so shorten the split to match. */
 @media (max-height: 540px) and (orientation: landscape) {
   .yb-category-split-shell {
-    --yb-split-y: 1.25rem;
+    --yb-split-y: 0.75rem;
   }
 }
 
@@ -6287,7 +6437,300 @@ button:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .yb-category-split-card__image,
-  .yb-category-split-card__content {
+  .yb-category-split-card__content,
+  .yb-category-split-card__title,
+  .yb-category-split-card__title::after,
+  .yb-category-split-card__cue {
+    transition: none;
+  }
+}
+
+/* =========================================
+   NAVBAR - PROFESSIONAL PASS
+   -------------------------------------------------
+   Appended last so it wins over the four earlier
+   navbar layers without rewriting any of them.
+
+   What changed and why:
+
+   - One optical height. The row was 84px at lg and
+     stepped 76 / 64px below, so the logo appeared to
+     change size between breakpoints. `clamp()` makes
+     the bar one continuous size instead.
+
+   - A real type scale. Nav links sat at 0.93rem /
+     500, and the active weight jumped to 600, which
+     made the active item physically wider and pulled
+     the row off-centre. Weight is now constant and the
+     active state is carried by colour and the
+     underline only, so nothing shifts when it changes.
+
+   - Tracking. 0.015em read as loose next to the
+     logo's own lettering; tightened to -0.005em.
+
+   - The underline is the single active cue, so it was
+     made thinner, centred under the label, and is drawn
+     from the middle so it grows both ways.
+
+   - Hairline borders were slightly too dark at
+     rgba(90, 61, 53, 0.2), reading as heavy next to a
+     10px radius. Softened, and the icon buttons now
+     carry a resting border so the row reads as one
+     aligned set rather than icons floating between the
+     logo and the button.
+
+   All of it is metric-only: no colours were introduced
+   and no selector outside the header is touched.
+   ========================================= */
+
+/* --- The bar --------------------------------------------------------- */
+
+.yb-header .container {
+  max-width: 1280px;
+}
+
+.yb-header-inner {
+  min-height: clamp(60px, 5.4vw, 78px);
+  gap: clamp(14px, 2.4vw, 34px);
+}
+
+.yb-header {
+  background: rgba(255, 250, 244, 0.92);
+  border-bottom: 1px solid rgba(90, 61, 53, 0.09);
+  box-shadow: 0 1px 3px rgba(90, 61, 53, 0.03);
+  backdrop-filter: blur(16px) saturate(1.1);
+}
+
+/* The logo is the tallest thing in the row, so it is capped rather than scaled
+   freely - otherwise it outgrows the bar on wide screens and the nav looks
+   undersized beside it. */
+.yb-logo img {
+  width: clamp(132px, 13.5vw, 162px);
+}
+
+/* --- Primary navigation ----------------------------------------------- */
+
+.yb-desktop-nav {
+  gap: clamp(24px, 3.2vw, 40px);
+  margin-inline: auto;
+}
+
+.yb-nav-link {
+  min-height: 40px;
+  padding: 6px 1px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--yb-brown-light);
+  transition: color 0.22s ease;
+}
+
+/* Underline: 1.5px, and scaled from the centre so it grows outward under the
+   label instead of wiping left to right. */
+.yb-nav-link::after {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1.5px;
+  background: #b16868;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Weight is deliberately NOT changed on hover/active: at 500 the label must
+   keep its exact width, otherwise the centred row shifts on every page load. */
+.yb-nav-link:hover {
+  background: transparent;
+  color: var(--yb-brown);
+  transform: none;
+}
+
+.yb-nav-link.active {
+  background: transparent;
+  color: var(--yb-brown);
+  font-weight: 500;
+}
+
+.yb-nav-link.active::after,
+.yb-nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* --- Action row ------------------------------------------------------- */
+
+.yb-header-actions {
+  gap: clamp(5px, 0.7vw, 9px);
+}
+
+/* A resting hairline on every action aligns them into one visual set and keeps
+   the icons from appearing to drift inside the row. */
+.yb-nav-action,
+.yb-header-search,
+.yb-icon-btn,
+.yb-mobile-menu-btn,
+.yb-logout-btn {
+  border-color: rgba(90, 61, 53, 0.12);
+  border-radius: 10px;
+}
+
+.yb-nav-action::before,
+.yb-header-search::before {
+  background: rgba(222, 165, 164, 0.12);
+}
+
+.yb-nav-action::after,
+.yb-header-search::after {
+  background: rgba(222, 165, 164, 0.12);
+}
+
+.yb-nav-action:hover,
+.yb-header-search:hover,
+.yb-icon-btn:hover,
+.yb-logout-btn:hover,
+.yb-mobile-menu-btn:hover {
+  border-color: rgba(90, 61, 53, 0.2);
+  background: rgba(222, 165, 164, 0.08);
+  color: var(--yb-brown);
+}
+
+/* The badge inherited a 2px radius and a pink fill; a true pill at full
+   contrast reads cleaner and stays legible at 16px. */
+.yb-cart-badge {
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--yb-brown);
+  color: var(--yb-white);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* --- Sign-in / account ------------------------------------------------- */
+
+.yb-login-btn,
+.yb-account-btn {
+  min-height: 38px;
+  padding: 8px 15px;
+  border: 1px solid rgba(90, 61, 53, 0.14);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--yb-brown);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.yb-login-btn {
+  margin-left: 6px;
+}
+
+.yb-login-btn:hover,
+.yb-account-btn:hover {
+  border-color: rgba(90, 61, 53, 0.28);
+  background: rgba(90, 61, 53, 0.04);
+  color: var(--yb-brown);
+  transform: none;
+  box-shadow: none;
+}
+
+.yb-admin-btn {
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid rgba(113, 139, 88, 0.28);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--yb-green);
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.yb-admin-btn:hover {
+  border-color: rgba(113, 139, 88, 0.45);
+  background: rgba(113, 139, 88, 0.07);
+  color: var(--yb-green);
+}
+
+/* --- Phones ----------------------------------------------------------- */
+
+/* Below lg the desktop nav is hidden and the bar has to stay compact, so the
+   clamps above are pulled back in explicitly. The logo and the control box are
+   the only two things competing for the row here. */
+@media (max-width: 991.98px) {
+  .yb-header-inner {
+    min-height: 66px;
+    gap: 14px;
+  }
+
+  .yb-logo img {
+    width: clamp(104px, 30vw, 140px);
+  }
+
+  .yb-header-actions {
+    gap: 3px;
+  }
+
+  .yb-icon-btn,
+  .yb-nav-action,
+  .yb-header-search,
+  .yb-logout-btn,
+  .yb-mobile-menu-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* The account name is hidden at this width, so the chip would collapse to an
+     orphan icon with a pill border. Give it the same square-ish geometry as
+     the controls beside it. */
+  .yb-account-btn,
+  .yb-login-btn {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    margin-left: 0;
+    justify-content: center;
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 479.98px) {
+  .yb-header-inner {
+    min-height: 60px;
+    gap: 10px;
+  }
+
+  .yb-logo img {
+    width: 104px;
+  }
+
+  .yb-icon-btn,
+  .yb-nav-action,
+  .yb-header-search,
+  .yb-logout-btn,
+  .yb-mobile-menu-btn,
+  .yb-account-btn,
+  .yb-login-btn {
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
+
+  .yb-cart-badge {
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    font-size: 0.6rem;
+  }
+}
+
+/* --- Reduced motion ---------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .yb-nav-link::after {
     transition: none;
   }
 }

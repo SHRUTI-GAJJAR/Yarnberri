@@ -24,6 +24,20 @@
   box-sizing: border-box;
 }
 
+/* Tailwind's preflight is disabled (see tailwind.config.js), so the border
+   baseline it would normally provide is declared here instead.
+   `border-style` initialises to `none`, which means Tailwind's
+   `border-width: 1px` utility - used by every shadcn component - would
+   compute to zero and render nothing. `border-width: 0` and `border-color`
+   are already the CSS initial values, so this block changes nothing that
+   was not already true; it only makes `border-style` predictable. */
+*,
+*::before,
+*::after {
+  border-style: solid;
+  border-width: 0;
+}
+
 html {
   scroll-behavior: smooth;
   /* `clip` (not `hidden`) contains stray overflow without creating a scroll

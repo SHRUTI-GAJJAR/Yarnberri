@@ -1,4 +1,4 @@
-import { Flower2, Gift, Heart, Sparkles, ToyBrick, WandSparkles } from 'lucide-react';
+import { ArrowRight, Flower2, Gift, Heart, Sparkles, ToyBrick, WandSparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 /**
@@ -19,9 +19,10 @@ import { Link } from 'react-router-dom';
  * row spacing and the gap between neighbouring cards have to leave room for
  * the panels to leave the card box.
  *
- * The content layer deliberately carries ONLY the category name. There is no
- * subtitle, description or "Explore" affordance - the reference composition is
- * a revealed name band, nothing more.
+ * The content layer deliberately carries ONLY the category name, followed by an
+ * inline arrow so the revealed line reads as link text. There is no subtitle or
+ * description: the arrow is the entire affordance, saying "this leads to the
+ * category" without describing anything about the product.
  *
  * `image` is optional. Only Crochet Flowers has generated transparent artwork
  * today (`/images/categories/Pastel Crochet Flower Bouquet Cutout.png`).
@@ -45,26 +46,31 @@ const categories = [
     title: 'Soft Toys',
     slug: 'soft-toys',
     icon: Heart,
+    image: '/images/categories/Amigurumi Friends Crochet Plush Collection.png',
   },
   {
     title: 'Keychains',
     slug: 'keychains',
     icon: Gift,
+    image: '/images/categories/Keychain_category_image.png',
   },
   {
     title: 'Hair Accessories',
     slug: 'hair-accessories',
     icon: WandSparkles,
+    image: '/images/categories/Pastel Crochet Flower Bouquet Cutout.png',
   },
   {
     title: 'Charms',
     slug: 'charms',
     icon: ToyBrick,
+    image: '/images/categories/Pastel Crochet Flower Bouquet Cutout.png',
   },
   {
     title: 'Handmade Gifts',
     slug: 'handmade-gifts',
     icon: Sparkles,
+    image: '/images/categories/Pastel Crochet Flower Bouquet Cutout.png',
   },
 ];
 
@@ -96,6 +102,14 @@ export default function CategorySection() {
                 <div className="yb-category-split-card__content">
                   <h3 className="yb-category-split-card__title" id={titleId(slug)}>
                     {title}
+                    {/* The only affordance: trails the name so the line reads as
+                        one piece of link text, and describes nothing. */}
+                    <ArrowRight
+                      className="yb-category-split-card__cue"
+                      size={14}
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    />
                   </h3>
                 </div>
 
