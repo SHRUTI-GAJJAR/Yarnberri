@@ -6,6 +6,10 @@ import ReactDOM from "react-dom/client";
 import "./styles/vendor.css";
 import "./styles/globals.css";
 import "./styles/crochet.css";
+// Search controls only. Imported last so the Yarnberri skin for the
+// shadcn Button Group wins over the legacy .yb-header-search /
+// .yb-shop-search rules it replaces.
+import "./styles/search.css";
 import App from "./App";
 
 ReactDOM.createRoot(document.getElementById("root")).render(

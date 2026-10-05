@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, ShoppingBag, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Search, ShoppingBag, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { getProducts } from '../../services/productService';
 import WishlistButton from '../../components/common/WishlistButton';
+import { Button } from '@/components/ui/button';
+import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -99,6 +102,18 @@ export default function ShopPage() {
     }, { replace: true });
   };
 
+  // Drops `search` from the URL while leaving `category` untouched, so
+  // clearing the text inside a category keeps the category filter applied.
+  const clearSearch = () => {
+    setSearchTerm('');
+
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.delete('search');
+      return nextParams;
+    }, { replace: true });
+  };
+
   const filteredProducts = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
@@ -156,17 +171,52 @@ export default function ShopPage() {
         </div>
 
         <div className="yb-shop-toolbar">
-          <form className="yb-shop-search" role="search" onSubmit={handleSearchSubmit}>
-            <button type="submit" className="yb-shop-search-submit" aria-label="Search products">
-              <Search size={17} />
-            </button>
-            <input
+          <form className="yarnberri-search-shop" role="search" onSubmit={handleSearchSubmit}>
+            <ButtonGroup
+              className="yarnberri-search-group--shop"
+              data-has-value={searchTerm.trim() ? 'true' : 'false'}
               aria-label="Search products"
-              type="text"
-              placeholder="Search by name, category, or style"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
+            >
+              <Button
+                type="submit"
+                className="yarnberri-search-btn-lead"
+                aria-label="Search products"
+                title="Search products"
+              >
+                <Search size={17} strokeWidth={1.8} />
+              </Button>
+
+              <Input
+                aria-label="Search products"
+                type="text"
+                enterKeyHint="search"
+                placeholder="Search by name, category, or style"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                onKeyDown={(event) => {
+                  // Escape clears the field without touching the category.
+                  if (event.key !== 'Escape' || !searchTerm) return;
+
+                  event.preventDefault();
+                  clearSearch();
+                }}
+              />
+
+              {searchTerm.trim() && (
+                <>
+                  <ButtonGroupSeparator />
+                  <Button
+                    type="button"
+                    className="yarnberri-search-btn-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                    title="Clear search"
+                  >
+                    <X size={16} strokeWidth={2} />
+                  </Button>
+                </>
+              )}
+            </ButtonGroup>
           </form>
 
           <div className="yb-filter-pills" aria-label="Filter products by category">

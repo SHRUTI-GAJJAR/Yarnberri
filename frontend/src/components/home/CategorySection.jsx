@@ -58,7 +58,7 @@ const categories = [
     title: 'Hair Accessories',
     slug: 'hair-accessories',
     icon: WandSparkles,
-    image: '/images/categories/Pastel Crochet Flower Bouquet Cutout.png',
+    image: '/images/categories/hair_aces_category.png',
   },
   {
     title: 'Charms',

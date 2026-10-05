@@ -11,6 +11,9 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
@@ -88,8 +91,12 @@ export default function AppLayout({ children }) {
     setSearchOpen(true);
   };
 
+  // Dismissing also drops the query. Leaving it behind would keep
+  // `data-has-value` set, which on touch would strand an expanded field in a
+  // navbar row that has already given its space back to the icon actions.
   const closeSearch = ({ restoreFocus = true } = {}) => {
     restoreFocusRef.current = restoreFocus;
+    setNavbarSearch("");
     setSearchOpen(false);
   };
 
@@ -123,13 +130,33 @@ export default function AppLayout({ children }) {
     event.preventDefault();
 
     if (searchOpen) {
+      // Touch: closeSearch clears the query too.
       closeSearch();
       return;
     }
 
-    // Desktop path: no mode class is in use, so drop focus to release
-    // :focus-within and return the navbar to its resting appearance.
+    // Desktop: drop focus to release :focus-within, and clear so no stale
+    // text keeps the group expanded.
+    setNavbarSearch("");
+
+    // Desktop path: the group is revealed by :focus-within, so dropping
+    // focus is what collapses it back to the resting icon.
     searchInputRef.current?.blur();
+  };
+
+  const handleClearSearch = () => {
+    setNavbarSearch("");
+    searchInputRef.current?.focus();
+  };
+
+  // The magnifier doubles as the close control while search mode is open, and
+  // it is the form's submit button. `preventDefault` matters here: without it
+  // the click's default submit action fires against the re-rendered form,
+  // `handleSearchSubmit` sees an empty query and calls `openSearch()`, so the
+  // field closes and immediately reopens.
+  const handleSearchCloseClick = (event) => {
+    event.preventDefault();
+    closeSearch();
   };
 
   return (
@@ -169,45 +196,64 @@ export default function AppLayout({ children }) {
 
             {/* Header Actions */}
             <div className="yb-header-actions">
+              {/* shadcn/ui Button Group, Yarnberri skin. The magnifier opens
+                  search mode on touch layouts and submits once the field has
+                  text; the trailing X clears the field. */}
               <form
-                className={`yb-header-search yb-nav-action${searchOpen ? " is-open" : ""}`}
+                className="yarnberri-search-navbar"
                 onSubmit={handleSearchSubmit}
                 role="search"
               >
-                {searchOpen ? (
-                  <button
-                    type="button"
-                    className="yb-header-search-back"
-                    onClick={() => closeSearch()}
-                    aria-label="Close search"
-                    title="Close search"
-                  >
-                    <ArrowLeft size={18} strokeWidth={1.8} />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    ref={searchButtonRef}
-                    className="yb-icon-btn yb-header-search-button"
-                    onClick={handleSearchButtonClick}
-                    aria-label="Search products"
+                <ButtonGroup
+                  className="yarnberri-search-navbar-group"
+                  data-open={searchOpen ? "true" : "false"}
+                  data-has-value={navbarSearch.trim() ? "true" : "false"}
+                  aria-label="Search products"
+                >
+                  <Button
+                    ref={searchOpen ? undefined : searchButtonRef}
+                    type={searchOpen ? "button" : "submit"}
+                    className="yarnberri-search-btn-lead"
+                    onClick={searchOpen ? handleSearchCloseClick : handleSearchButtonClick}
+                    aria-label={searchOpen ? "Close search" : "Search products"}
                     aria-expanded={searchOpen}
                     aria-controls={SEARCH_FIELD_ID}
+                    title={searchOpen ? "Close search" : "Search products"}
                   >
-                    <Search size={19} strokeWidth={1.8} />
-                  </button>
-                )}
-                <input
-                  id={SEARCH_FIELD_ID}
-                  ref={searchInputRef}
-                  type="search"
-                  enterKeyHint="search"
-                  aria-label="Search products"
-                  placeholder="Search"
-                  value={navbarSearch}
-                  onChange={(event) => setNavbarSearch(event.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                />
+                    {searchOpen ? (
+                      <ArrowLeft size={18} strokeWidth={1.8} />
+                    ) : (
+                      <Search size={19} strokeWidth={1.8} />
+                    )}
+                  </Button>
+
+                  <Input
+                    id={SEARCH_FIELD_ID}
+                    ref={searchInputRef}
+                    type="search"
+                    enterKeyHint="search"
+                    aria-label="Search products"
+                    placeholder="Search products"
+                    value={navbarSearch}
+                    onChange={(event) => setNavbarSearch(event.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                  />
+
+                  {/* Kept in the layout at all times so the field does not
+                      change width as soon as text appears; `visibility`
+                      removes it from tab order until it is actionable. */}
+                  <Button
+                    type="button"
+                    className="yarnberri-search-btn-clear"
+                    onClick={handleClearSearch}
+                    disabled={!navbarSearch.trim()}
+                    data-hidden={navbarSearch.trim() ? undefined : "true"}
+                    aria-label="Clear search"
+                    title="Clear search"
+                  >
+                    <X size={16} strokeWidth={2} />
+                  </Button>
+                </ButtonGroup>
               </form>
 
               <Link

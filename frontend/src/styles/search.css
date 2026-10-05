@@ -1,0 +1,520 @@
+/* =========================================
+   Yarnberri search controls
+   shadcn/ui Button Group, Yarnberri skin
+   =========================================
+   SCOPE GUARANTEE
+   Every selector in this file starts with `.yarnberri-search-*`. There is no
+   bare `button`, `input`, `.search` or `.btn` rule anywhere below, so nothing
+   here can reach the Add to Cart, Checkout, Admin, Login/Register, filter
+   pill, or any other control on the site.
+
+   Bootstrap's reboot and the `yb-*` brand layer keep owning element defaults.
+   This file is imported after `crochet.css` so the search group wins over the
+   legacy `.yb-header-search` / `.yb-shop-search` rules, which are now unused
+   markup-wise and deliberately left in place (they are shared with the reduced
+   motion and search-mode blocks that must not be disturbed).
+
+   PALETTE — Yarnberri tokens only, no shadcn neutrals:
+     blush primary  #dea5a4
+     cream          var(--yb-cream)      #fffaf4
+     brown text     var(--yb-brown)      #5a3d35
+     soft brown     var(--yb-brown-light)#7a5b51
+     hairline       var(--yb-border)     #eadbd2
+
+   GEOMETRY
+     group radius 10px, inner buttons 8px, comfortable 38px desktop /
+     42px touch square — matching `.yb-nav-action` and `.yb-icon-btn` so the
+     group sits on the same baseline as Cart and Wishlist.
+   ========================================= */
+
+/* ---------- Form wrappers -------------------------------------------- */
+
+/* The `<form>` is the flex item inside `.yb-header-actions`; the group is
+   the thing that actually looks like a control. */
+.yarnberri-search-navbar {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.yarnberri-search-shop {
+  display: block;
+  width: min(560px, 100%);
+}
+
+/* ---------- Group container ------------------------------------------ */
+
+.yarnberri-search-group {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: stretch;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--yb-brown);
+  transition:
+    width 260ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.yarnberri-search-group[data-orientation="vertical"] {
+  flex-direction: column;
+  width: auto;
+  height: auto;
+}
+
+/* Reuses the existing `.yb-nav-action` glow so hovering the search group
+   feels identical to hovering Cart or Wishlist. */
+.yarnberri-search-group::before,
+.yarnberri-search-group::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease, transform 280ms ease;
+}
+
+.yarnberri-search-group::before {
+  background: linear-gradient(115deg, rgba(222, 165, 164, 0.2), rgba(232, 239, 223, 0.34));
+  transform: scale(0.94);
+}
+
+.yarnberri-search-group::after {
+  inset: 3px;
+  background: rgba(222, 165, 164, 0.24);
+  filter: blur(9px);
+  transform: scale(0.9);
+}
+
+/* Expanded state. Four ways in, so the four states stay distinguishable:
+
+     not hovered / no focus / closed / empty  ->  38px resting icon
+     hover, focus-within, open mode, or text  ->  full field
+
+   `data-has-value` keeps a submitted/typed query on screen after the pointer
+   leaves, which is how "search has text" reads at a glance. It can never
+   coexist with `data-open="false"` because closing the group clears the
+   query first (see `closeSearch` in AppLayout). */
+.yarnberri-search-navbar:hover .yarnberri-search-group,
+.yarnberri-search-navbar:focus-within .yarnberri-search-group,
+.yarnberri-search-group[data-open="true"],
+.yarnberri-search-group[data-has-value="true"] {
+  width: 216px;
+  border-color: rgba(222, 165, 164, 0.42);
+  background: rgba(255, 250, 244, 0.82);
+  box-shadow: 0 3px 10px rgba(90, 61, 53, 0.055);
+}
+
+.yarnberri-search-navbar:hover .yarnberri-search-group::before,
+.yarnberri-search-navbar:hover .yarnberri-search-group::after,
+.yarnberri-search-navbar:focus-within .yarnberri-search-group::before,
+.yarnberri-search-navbar:focus-within .yarnberri-search-group::after,
+.yarnberri-search-group[data-open="true"]::before,
+.yarnberri-search-group[data-open="true"]::after,
+.yarnberri-search-group[data-has-value="true"]::before,
+.yarnberri-search-group[data-has-value="true"]::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Accessible focus treatment for the whole field.
+
+   Declared on the group rather than the input, so the ring is visible
+   whichever member has focus. The descendant selectors are load-bearing: the
+   expansion rule above is written as `.yarnberri-search-navbar:hover
+   .yarnberri-search-group` (0,3,0), which outranks a bare
+   `.yarnberri-search-group:focus-within` (0,2,0) and would swallow the
+   focus ring on every hover. Matching it here is what guarantees the ring
+   survives a pointer resting on the control. */
+.yarnberri-search-navbar:hover .yarnberri-search-group:focus-within,
+.yarnberri-search-navbar:focus-within .yarnberri-search-group,
+.yarnberri-search-group:focus-within {
+  border-color: rgba(222, 165, 164, 0.72);
+  box-shadow:
+    0 3px 10px rgba(90, 61, 53, 0.055),
+    0 0 0 3px rgba(222, 165, 164, 0.2);
+}
+
+/* ---------- Members --------------------------------------------------- */
+
+.yarnberri-search-btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--yb-brown);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    opacity 200ms ease;
+}
+
+.yarnberri-search-btn:disabled {
+  cursor: default;
+}
+
+.yarnberri-search-btn-ghost:hover:not(:disabled) {
+  background: rgba(222, 165, 164, 0.18);
+  color: var(--yb-brown);
+}
+
+.yarnberri-search-btn-ghost:active:not(:disabled) {
+  background: rgba(222, 165, 164, 0.3);
+}
+
+.yarnberri-search-btn-subtle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--yb-brown);
+}
+
+/* Leading magnifier / trailing close. Sized from the group minus its 1px
+   borders so both edges stay flush. */
+.yarnberri-search-btn-icon {
+  width: 37px;
+  height: 100%;
+}
+
+.yarnberri-search-btn-icon-sm {
+  width: 33px;
+  height: 100%;
+}
+
+.yarnberri-search-btn-lead {
+  width: 37px;
+}
+
+.yarnberri-search-btn-clear {
+  width: 33px;
+}
+
+.yarnberri-search-btn > svg {
+  flex: 0 0 auto;
+  transition: transform 240ms ease;
+}
+
+/* Matches the existing `.yb-nav-action:hover > svg` treatment. */
+.yarnberri-search-group:hover .yarnberri-search-btn-icon > svg,
+.yarnberri-search-group:focus-within .yarnberri-search-btn-icon > svg {
+  transform: scale(0.94);
+}
+
+.yarnberri-search-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Focus ring.
+
+   The brand layer already sets `outline: 2px solid #dea5a4; outline-offset:
+   3px` on `.yb-header button:focus-visible` and `.yb-shop-page
+   button:focus-visible`. Same colour and weight are kept here so the search
+   group is indistinguishable from every other focusable control on the site.
+
+   Only the offset changes, and it has to: the group sets `overflow: hidden`
+   to clip the expanding field, which would slice off the outer 3px ring and
+   leave the keyboard user with no visible indicator at all. Insetting it to
+   -2px keeps the identical ring visible inside the clip.
+
+   The descendant selector is required, not stylistic: it outranks the
+   `.yb-header button:focus-visible` (0,2,1) rule that would otherwise win on
+   specificity. The group-level `:focus-within` ring above is the wider
+   confirmation around the whole control. */
+.yarnberri-search-group .yarnberri-search-btn:focus-visible {
+  outline: 2px solid #dea5a4;
+  outline-offset: -2px;
+}
+
+/* The clear affordance is always laid out so the field does not jump width
+   the moment the first character is typed; `visibility` (not `display`)
+   keeps the reserved space while removing it from the tab order and the
+   accessibility tree. The button is also `disabled` at the call site. */
+.yarnberri-search-group [data-hidden="true"] {
+  visibility: hidden;
+}
+
+.yarnberri-search-group-separator {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1px;
+  height: 18px;
+  background: rgba(222, 165, 164, 0.45);
+}
+
+/* ---------- Input ----------------------------------------------------- */
+
+.yarnberri-search-input {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--yb-brown);
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  caret-color: #dea5a4;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.yarnberri-search-input::placeholder {
+  color: var(--yb-brown-light);
+  opacity: 0.72;
+}
+
+/* WebKit renders its own clear affordance on `type="search"`, which would
+   put two dismiss controls next to each other. Yarnberri ships an explicit
+   Button Group clear button instead. */
+.yarnberri-search-input[type="search"]::-webkit-search-cancel-button,
+.yarnberri-search-input[type="search"]::-webkit-search-decoration,
+.yarnberri-search-input[type="search"]::-webkit-search-results-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.yarnberri-search-input:focus,
+.yarnberri-search-input:focus-visible,
+.yarnberri-search-input:active {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
+
+/* ---------- Shop page variant ---------------------------------------- */
+
+/* Always visible, so it never animates width — that would be the jarring
+   "expanding search" motion called out as a reduced-motion risk. */
+.yarnberri-search-group--shop {
+  width: min(560px, 100%);
+  height: 48px;
+  border-color: rgba(222, 165, 164, 0.58);
+  border-radius: 10px;
+  background: rgba(255, 250, 244, 0.82);
+  box-shadow: 0 2px 8px rgba(90, 61, 53, 0.045);
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.yarnberri-search-group--shop:focus-within {
+  border-color: #dea5a4;
+  background: var(--yb-white);
+  box-shadow:
+    0 0 0 3px rgba(222, 165, 164, 0.2),
+    0 2px 8px rgba(90, 61, 53, 0.05);
+}
+
+.yarnberri-search-group--shop .yarnberri-search-btn-icon,
+.yarnberri-search-group--shop .yarnberri-search-btn-lead {
+  width: 46px;
+}
+
+.yarnberri-search-group--shop .yarnberri-search-btn-clear {
+  width: 38px;
+}
+
+.yarnberri-search-group--shop .yarnberri-search-input {
+  padding: 0 10px;
+  font-size: 0.95rem;
+}
+
+.yarnberri-search-group--shop .yarnberri-search-group-separator {
+  height: 22px;
+}
+
+/* The shop group never collapses, so its magnifier should not shrink with
+   the navbar's. */
+.yarnberri-search-group--shop .yarnberri-search-btn-icon > svg {
+  transform: none;
+}
+
+/* =========================================
+   Touch / small screens
+   =========================================
+   Breakpoints deliberately match the Bootstrap values already used by
+   `.yb-header-search-mode` (991.98px / 575.98px) so the navbar hands the
+   whole row to the field at exactly the same widths it does today.
+   ========================================= */
+
+@media (max-width: 991.98px) {
+  /* Closed: identical to the existing 38px navbar action.
+
+     Every selector here repeats `:hover` / `:focus-within` because the
+     desktop expansion rule is declared with higher specificity, and because
+     closing returns focus to the magnifier — without these, focus-within
+     would hold the field open at 216px after Escape on a closed search mode.
+     Matching specificity and relying on source order keeps the two states
+     unambiguous. */
+  .yarnberri-search-navbar:hover .yarnberri-search-group[data-open="false"],
+  .yarnberri-search-navbar:focus-within .yarnberri-search-group[data-open="false"],
+  .yarnberri-search-group[data-open="false"][data-has-value="true"],
+  .yarnberri-search-group[data-open="false"][data-has-value="true"]:hover,
+  .yarnberri-search-group[data-open="false"][data-has-value="true"]:focus-within {
+    width: 38px;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .yarnberri-search-navbar:hover .yarnberri-search-group[data-open="false"]::before,
+  .yarnberri-search-navbar:hover .yarnberri-search-group[data-open="false"]::after,
+  .yarnberri-search-navbar:focus-within .yarnberri-search-group[data-open="false"]::before,
+  .yarnberri-search-navbar:focus-within .yarnberri-search-group[data-open="false"]::after,
+  .yarnberri-search-group[data-open="false"][data-has-value="true"]::before,
+  .yarnberri-search-group[data-open="false"][data-has-value="true"]::after {
+    opacity: 0;
+  }
+
+  /* No hover on touch, so the clipped field must also leave the tab order
+     and the accessibility tree while closed. Desktop keeps it focusable
+     because tabbing to a zero-width field is what reveals it. */
+  .yarnberri-search-group[data-open="false"] .yarnberri-search-input {
+    visibility: hidden;
+  }
+
+  /* Open: take over the navbar row. The header already hides cart,
+     wishlist, login and account in search mode, so nothing can collide
+     with the field. `min-width: 0` on both levels is what prevents the
+     input from forcing horizontal overflow. */
+  .yarnberri-search-navbar {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+  }
+
+  .yarnberri-search-group[data-open="true"],
+  .yarnberri-search-group[data-open="true"]:hover,
+  .yarnberri-search-navbar:hover .yarnberri-search-group[data-open="true"],
+  .yarnberri-search-navbar:focus-within .yarnberri-search-group[data-open="true"],
+  .yarnberri-search-group[data-open="true"][data-has-value="true"] {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 42px;
+    border-color: rgba(222, 165, 164, 0.62);
+    background: var(--yb-cream);
+    box-shadow: 0 3px 10px rgba(90, 61, 53, 0.07);
+  }
+
+  .yarnberri-search-group[data-open="true"]::before,
+  .yarnberri-search-group[data-open="true"]::after,
+  .yarnberri-search-group[data-open="true"][data-has-value="true"]::before,
+  .yarnberri-search-group[data-open="true"][data-has-value="true"]::after {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .yarnberri-search-group[data-open="true"] .yarnberri-search-input {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .yarnberri-search-navbar:hover .yarnberri-search-group[data-open="false"],
+  .yarnberri-search-navbar:focus-within .yarnberri-search-group[data-open="false"],
+  .yarnberri-search-group[data-open="false"][data-has-value="true"],
+  .yarnberri-search-group[data-open="false"][data-has-value="true"]:hover,
+  .yarnberri-search-group[data-open="false"][data-has-value="true"]:focus-within {
+    width: 34px;
+    height: 34px;
+  }
+
+  .yarnberri-search-group[data-open="false"] .yarnberri-search-btn-icon,
+  .yarnberri-search-group[data-open="false"] .yarnberri-search-btn-lead,
+  .yarnberri-search-group[data-open="false"] .yarnberri-search-btn-clear {
+    width: 33px;
+  }
+
+  .yarnberri-search-group[data-open="true"],
+  .yarnberri-search-group[data-open="true"]:hover,
+  .yarnberri-search-navbar:hover .yarnberri-search-group[data-open="true"],
+  .yarnberri-search-navbar:focus-within .yarnberri-search-group[data-open="true"],
+  .yarnberri-search-group[data-open="true"][data-has-value="true"] {
+    height: 40px;
+  }
+
+  .yarnberri-search-group[data-open="true"] .yarnberri-search-btn-icon,
+  .yarnberri-search-group[data-open="true"] .yarnberri-search-btn-lead {
+    width: 38px;
+  }
+
+  .yarnberri-search-group[data-open="true"] .yarnberri-search-btn-clear {
+    width: 36px;
+  }
+
+  /* The shop toolbar is a single-column grid here, so the group takes the
+     full width rather than forcing the page to scroll. */
+  .yarnberri-search-group--shop,
+  .yarnberri-search-group--shop:focus-within {
+    width: 100%;
+    height: 46px;
+  }
+
+  .yarnberri-search-group--shop .yarnberri-search-btn-icon,
+  .yarnberri-search-group--shop .yarnberri-search-btn-lead {
+    width: 42px;
+  }
+
+  .yarnberri-search-group--shop .yarnberri-search-btn-clear {
+    width: 36px;
+  }
+}
+
+/* =========================================
+   Reduced motion
+   =========================================
+   The width change still happens — instantly — so opening, closing and
+   clearing remain fully functional. Only the easing is removed.
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .yarnberri-search-group,
+  .yarnberri-search-group::before,
+  .yarnberri-search-group::after,
+  .yarnberri-search-btn,
+  .yarnberri-search-btn > svg,
+  .yarnberri-search-group--shop {
+    transition: none;
+  }
+
+  .yarnberri-search-btn:active:not(:disabled) {
+    transform: none;
+  }
+
+  .yarnberri-search-group:hover .yarnberri-search-btn-icon > svg,
+  .yarnberri-search-group:focus-within .yarnberri-search-btn-icon > svg {
+    transform: none;
+  }
+}

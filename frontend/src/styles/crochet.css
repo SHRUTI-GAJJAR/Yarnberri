@@ -6053,9 +6053,16 @@ button:focus-visible {
   /* The travel is deliberately short. The point of the split is to uncover the
      name, not to throw the two panels across the section, so these stay small
      enough that the composition still reads as ONE card that opened rather than
-     two cards drifting apart. */
-  --yb-split-x: 0.5rem;
-  --yb-split-y: 1.5rem;
+     two cards drifting apart.
+
+     --yb-split-y has a hard floor. The name sits at the FOOT of the rear panel,
+     so the revealed band has to clear `padding-bottom + title height`:
+         2 x --yb-split-y  >=  padding-bottom + 2px + ~11.5px title
+     At the narrowest breakpoint that padding is 18px, giving a floor of about
+     15.75px, so 1.125rem (18px, a 36px band) is the smallest value that still
+     shows the whole title. Going lower starts clipping the name. */
+  --yb-split-x: 0.25rem;
+  --yb-split-y: 1.125rem;
   /* Resting gap between two neighbouring cards. Because both panels are
      `inset: 0`, they fill their column exactly, so the visible gap IS the
      column gutter - this value is half the gutter set on the columns below.
@@ -6387,8 +6394,8 @@ button:focus-visible {
     --yb-card-max: clamp(88px, 13vw, 132px);
     --yb-grid-gap: 1.5rem;
     --yb-card-gap: 2.25rem;
-    --yb-split-x: 0.5rem;
-    --yb-split-y: 1.375rem;
+    --yb-split-x: 0.25rem;
+    --yb-split-y: 1.125rem;
   }
 }
 
@@ -6397,8 +6404,8 @@ button:focus-visible {
     --yb-card-max: clamp(74px, 15vw, 116px);
     --yb-grid-gap: 1.125rem;
     --yb-card-gap: 2rem;
-    --yb-split-x: 0.375rem;
-    --yb-split-y: 1.25rem;
+    --yb-split-x: 0.25rem;
+    --yb-split-y: 1.125rem;
   }
 }
 
@@ -6410,7 +6417,7 @@ button:focus-visible {
     --yb-grid-gap: 0.875rem;
     --yb-card-gap: 1.5rem;
     --yb-split-x: 0px;
-    --yb-split-y: 1rem;
+    --yb-split-y: 1.125rem;
   }
 }
 
@@ -6421,7 +6428,7 @@ button:focus-visible {
     /* x is already 0 from the single-column breakpoint; restated so the
        "vertical split" intent survives if that breakpoint moves. */
     --yb-split-x: 0px;
-    --yb-split-y: 1.5rem;
+    --yb-split-y: 1.125rem;
   }
 }
 
