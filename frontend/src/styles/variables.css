@@ -1,0 +1,13 @@
+:root {
+  --cream: #fff7f3;
+  --blush: #f7dfe9;
+  --blush-deep: #e9b4c8;
+  --blue-mist: #dfeaf8;
+  --butter: #f9efbd;
+  --sage: #dfe9d8;
+  --cocoa: #7d5a45;
+  --ink: #2c1e1f;
+  --soft-neutral: #f5f0ee;
+  --card: rgba(255, 255, 255, 0.78);
+  --shadow-soft: 0 18px 40px rgba(64, 42, 45, 0.08);
+}
