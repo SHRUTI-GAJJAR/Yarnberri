@@ -1911,7 +1911,11 @@
 
 .yb-moment-shell {
   display: grid;
-  grid-template-columns: 1.1fr 1.3fr;
+  /* `minmax(0, ...)` on both tracks: a bare `1.3fr` is `minmax(auto, 1.3fr)`,
+     whose automatic minimum is the content's min-content width. One long word in
+     a card title would then widen the card column and push the last card past
+     the shell's right edge instead of wrapping. */
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr);
   gap: 24px;
   align-items: center;
   padding: 28px;
@@ -1919,6 +1923,12 @@
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(246, 222, 231, 0.18));
   border: 1px solid rgba(234, 219, 210, 0.8);
   box-shadow: var(--yb-shadow);
+}
+
+/* Grid items default to `min-width: auto`, so the text block would refuse to
+   shrink below its longest word and could shove the card column outwards. */
+.yb-moment-text {
+  min-width: 0;
 }
 
 .yb-moment-text p {
@@ -2778,7 +2788,11 @@ button:focus-visible {
 }
 
 .yb-home-page .yb-moment-shell {
-  padding: 24px 0;
+  /* `24px 0` here left the panel with no inline padding at all, so the headline
+     started on the container edge and the third card butted into the shell's
+     right border - both read as clipped. Same 24px inline gutter as the base
+     rule, only the vertical padding is reduced for the flatter home band. */
+  padding: 28px 24px;
   border: 0;
   border-top: 1px solid rgba(90, 61, 53, 0.18);
   border-bottom: 1px solid rgba(90, 61, 53, 0.18);
@@ -4436,8 +4450,7 @@ button:focus-visible {
 @media (max-width: 575px) {
   .yb-home-page .yb-moment-shell {
     gap: 14px;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding: 20px 16px;
   }
 
   .yb-home-page .yb-moment-grid {
@@ -5958,232 +5971,323 @@ button:focus-visible {
 }
 
 /* =========================================
-   CREATED COLLECTIONS - LAYERED CARDS
+   CREATED COLLECTIONS - SPLIT-LAYER CARDS
    ------------------------------------------
-   Recreates the layered front-image / rear-content
-   card interaction, scoped entirely to the
-   category section.
+   Two absolutely positioned panels that fill ONE box (see
+   CategorySection.jsx):
 
-   Uses new `yb-category-card*` names on purpose: the older
-   `.yb-collection-card` / `.yb-collection-icon` rules elsewhere in this
-   file can no longer match, so nothing here can leak into other sections.
+     front  .yb-category-split-card__image    z-index 2
+     back   .yb-category-split-card__content  z-index 1
 
-   Movement is transform-only and always smaller than the card padding, so
-   the layers never escape the card box and never create page overflow.
+   Geometry
+   --------
+   Both panels are `inset: 0`, so at rest they occupy exactly the same
+   rectangle. The artwork panel is fully OPAQUE and sits on top, so the card
+   reads as artwork alone - the category name is painted underneath and cannot
+   be seen. (The opacity matters: a translucent front panel would let the
+   covered name ghost through.)
+
+   The split
+   ---------
+   Hover / keyboard focus walks the artwork up-and-left and the name panel
+   down-and-right by --yb-split-x / --yb-split-y. Only `transform` transitions -
+   the card itself never moves, and neither layer fades, scales or fades out.
+   The two genuinely part instead of one dissolving.
+
+   Room for the travel
+   -------------------
+   Because the panels are inset by 0, they leave the card box on purpose, so
+   the card must NOT clip (`overflow: hidden` would destroy the effect) and the
+   surrounding section has to reserve space instead:
+     - `.yb-category-split-shell` pads inward so the artwork of the first
+       column can clear the viewport edge,
+     - the grid rows are spaced by --yb-split-y so the downward-travelling
+       name panel has room inside the row below it,
+     - the grid columns are padded by half of --yb-card-gap on each side, so
+       two neighbouring cards are --yb-card-gap apart. Keep --yb-card-gap at
+       2 x --yb-split-x or more: a hovered card's artwork moves left and its
+       name panel right, and anything less lets them cross into the
+       neighbours.
+     - `html`/`body` already use `overflow-x: clip`, so a mis-measured layout
+       degrades to a clipped edge rather than a page-wide scrollbar.
+
+   --yb-split-x / --yb-split-y / --yb-card-gap live on the shell so both the
+   grid spacing and the cards read the same numbers. The horizontal leg of the
+   diagonal is deliberately much shorter than the vertical one, because the
+   gap it needs is paid for by the gap BETWEEN cards: a long horizontal travel
+   would force a wide gutter and shrink the cards. Below 768px the grid is a
+   single column, so the diagonal is dropped entirely (x collapses to 0) and
+   the cards get artwork up / name down with no horizontal clearance needed.
+
+   The names are unique to this section, so nothing here can leak into the
+   older `.yb-collection-card` / `.yb-category-card` rules elsewhere.
    ========================================= */
 
-.yb-category-section .yb-category-card {
-  position: relative;
-  display: grid;
-  grid-template-areas: "stack";
-  height: 100%;
-  padding: 20px;
-  border: 1px solid rgba(234, 219, 210, 0.92);
-  border-radius: 13px;
-  background:
-    radial-gradient(120% 90% at 100% 0%, rgba(253, 231, 239, 0.55) 0%, rgba(255, 250, 244, 0) 62%),
-    linear-gradient(158deg, var(--yb-white) 0%, var(--yb-cream-soft) 100%);
-  box-shadow: 0 4px 14px rgba(90, 61, 53, 0.05);
-  isolation: isolate;
-  transition:
-    box-shadow 420ms ease-in-out,
-    border-color 420ms ease-in-out;
+.yb-category-split-shell {
+  --yb-split-x: 1.25rem;
+  --yb-split-y: 3.5rem;
+  /* Resting gap between two neighbouring cards. Because both panels are
+     `inset: 0`, they fill their column exactly, so the visible gap IS the
+     column gutter - this value is half the gutter set on the columns below.
+     Picked to be >= 2 x --yb-split-x, so the travelling panels of a hovered
+     card meet the neighbours' edges instead of crossing into them. */
+  --yb-card-gap: 2.5rem;
+
+  /* Half the resting gap plus the horizontal travel, so the outermost columns
+     sit as far from the viewport edge as they sit from each other, and the
+     artwork still has its travel distance to clear the edge. A hand-tuned value
+     cannot do this at every width - Bootstrap's container max-widths
+     (540 / 720 / 960 / 1140 / 1320) step independently of the viewport and
+     leave as little as 3px of margin right at each step. */
+  padding-inline: max(calc(var(--yb-card-gap) / 2 + var(--yb-split-x)), 1.25rem);
+  /* Reserves the downward travel of the last row's name panel, so the section's
+     existing bottom padding still reads as the gap to the next section. */
+  padding-bottom: var(--yb-split-y);
 }
 
-.yb-category-section .yb-category-card__image,
-.yb-category-section .yb-category-card__content {
-  grid-area: stack;
+/* Bootstrap rows space with `margin-top` on the columns, so the extra room the
+   travelling panels need has to be added there rather than via `row-gap`. */
+.yb-category-split-grid > [class*="col-"] {
+  margin-top: calc(1.5rem + var(--yb-split-y));
 }
 
-/* --- Front layer: artwork panel ------------------------------------- */
+/* The horizontal gutter is ours, not Bootstrap's: the two panels fill the
+   column (they are `inset: 0`), so a column's inline padding on BOTH sides is
+   what opens the gap between two neighbouring cards. Each column therefore
+   contributes half of --yb-card-gap. Overrides `g-4`'s 1.5rem, which was set
+   before the cards had panels that travel sideways. */
+.yb-category-split-grid > [class*="col-"] {
+  padding-inline: calc(var(--yb-card-gap) / 2);
+}
 
-.yb-category-section .yb-category-card__image {
+/* --- The card: a positioning context and nothing else ------------------ */
+
+.yb-category-split-card {
   position: relative;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  align-self: start;
-  justify-self: stretch;
-  width: min(100%, 200px);
+  display: block;
+  width: 100%;
   aspect-ratio: 1 / 1;
-  margin: -4px auto 18px;
+  color: inherit;
+  text-decoration: none;
+  isolation: isolate;
+}
+
+/* --- Both panels: the identical box, one on top of the other ------------ */
+
+.yb-category-split-card__image,
+.yb-category-split-card__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  transition: transform 0.5s ease-in-out;
+}
+
+/* --- Front layer: artwork panel ---------------------------------------- */
+
+.yb-category-split-card__image {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  border: 1px solid rgba(234, 219, 210, 0.8);
-  border-radius: 11px;
-  background:
-    radial-gradient(90% 70% at 50% 22%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 70%),
-    linear-gradient(152deg, rgba(253, 231, 239, 0.62) 0%, rgba(255, 244, 234, 0.5) 48%, rgba(232, 239, 223, 0.55) 100%);
+  border: 1px solid rgba(234, 219, 210, 0.85);
+  /* Opaque base colour under translucent gradients. Without it the covered
+     name panel shows through and the default state is not image-only. */
+  background-color: #fdf4ee;
+  background-image:
+    radial-gradient(92% 70% at 50% 20%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 68%),
+    linear-gradient(152deg, rgba(253, 231, 239, 0.85) 0%, rgba(255, 244, 234, 0.75) 46%, rgba(232, 239, 223, 0.8) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    0 6px 16px rgba(90, 61, 53, 0.07);
-  transform: translate3d(0, 0, 0);
-  transition: transform 420ms ease-in-out, box-shadow 420ms ease-in-out;
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 20px rgba(90, 61, 53, 0.09);
 }
 
 /* Transparent artwork must never be cropped. */
-.yb-category-section .yb-category-card__artwork {
+.yb-category-split-card__artwork {
   width: 100%;
   height: 100%;
-  padding: 9%;
+  padding: 10%;
   object-fit: contain;
 }
 
-.yb-category-section .yb-category-card__fallback {
-  color: rgba(90, 61, 53, 0.62);
+.yb-category-split-card__fallback {
+  color: rgba(90, 61, 53, 0.6);
 }
 
-/* --- Rear layer: card face ------------------------------------------ */
+/* --- Rear layer: name panel -------------------------------------------- */
 
-.yb-category-section .yb-category-card__content {
-  position: relative;
+.yb-category-split-card__content {
   z-index: 1;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0;
-  transform: translate3d(0, 0, 0);
-  transition: transform 420ms ease-in-out;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 16px 18px;
+  border: 1px solid rgba(234, 219, 210, 1);
+  /* Opaque, and a shade lighter than the page's --yb-cream, so the revealed
+     band reads as its own panel instead of melting into the background once
+     the two layers part. */
+  background-color: var(--yb-white);
+  background-image: linear-gradient(150deg, #fffefc 0%, var(--yb-cream-soft) 100%);
+  box-shadow: 0 10px 24px rgba(90, 61, 53, 0.1);
 }
 
-/* Yarn-loop flourish on the rear layer. It sits in the band the artwork
-   panel covers at rest, so the hover reveal exposes it. */
-.yb-category-section .yb-category-card__flourish {
-  position: absolute;
-  top: -2px;
-  right: 2px;
-  width: 44px;
-  height: 44px;
-  pointer-events: none;
-  opacity: 0.5;
-  background:
-    radial-gradient(circle at 50% 16%, rgba(113, 139, 88, 0.6) 0 2.5px, transparent 3px),
-    radial-gradient(circle at 84% 50%, rgba(113, 139, 88, 0.42) 0 2.5px, transparent 3px),
-    radial-gradient(circle at 50% 84%, rgba(113, 139, 88, 0.42) 0 2.5px, transparent 3px),
-    radial-gradient(circle at 16% 50%, rgba(113, 139, 88, 0.42) 0 2.5px, transparent 3px),
-    radial-gradient(circle at 50% 50%, rgba(222, 165, 164, 0.85) 0 2px, transparent 2.5px);
-}
-
-.yb-category-section .yb-category-card__title {
-  position: relative;
-  margin-bottom: 7px;
+/* The name is the only thing the split reveals. It sits at the foot of the
+   panel, matching the reference composition, and is never taller than the
+   space a two-line title needs. */
+.yb-category-split-card__title {
+  margin: 0;
   color: var(--yb-brown);
   font-family: "Playfair Display", serif;
-  font-size: 1.22rem;
-  line-height: 1.24;
-  letter-spacing: -0.015em;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.16;
+  letter-spacing: -0.01em;
+  text-align: center;
 }
 
-.yb-category-section .yb-category-card__description {
-  position: relative;
-  margin-bottom: 14px;
-  color: var(--yb-brown-light);
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-.yb-category-section .yb-category-card__explore {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: auto;
-  color: var(--yb-brown);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.yb-category-section .yb-category-card__explore svg {
-  transition: transform 420ms ease-in-out;
-}
-
-/* --- Hover / keyboard reveal (pointer-precise devices only) --------- */
-
-@media (hover: hover) and (pointer: fine) {
-  .yb-category-section .yb-category-card:hover,
-  .yb-category-section .yb-category-card:focus-visible {
-    border-color: rgba(222, 165, 164, 0.72);
-    box-shadow: 0 14px 30px rgba(90, 61, 53, 0.11);
+/* --- Type and icon scale with the card, not with the viewport -------------
+   Six cards share one line from lg up, where a card is only ~115px wide. At
+   that size the base 1.05rem name and the 54px lucide icon no longer fit
+   inside the panel, so both step down. Only sizes change here - the split, the
+   gap and the travel are untouched. */
+@media (min-width: 1200px) {
+  .yb-category-split-card__content {
+    padding: 0 10px 12px;
   }
 
-  /* Resting offsets create the stacked look; the hover state separates the
-     two layers in opposite directions. */
-  .yb-category-section .yb-category-card__image {
-    transform: translate3d(8px, 8px, 0);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.85),
-      0 10px 22px rgba(90, 61, 53, 0.1);
+  .yb-category-split-card__title {
+    font-size: 0.92rem;
   }
 
-  .yb-category-section .yb-category-card:hover .yb-category-card__image,
-  .yb-category-section .yb-category-card:focus-visible .yb-category-card__image {
-    transform: translate3d(-14px, -14px, 0);
-  }
-
-  .yb-category-section .yb-category-card:hover .yb-category-card__content,
-  .yb-category-section .yb-category-card:focus-visible .yb-category-card__content {
-    transform: translate3d(10px, 10px, 0);
-  }
-
-  .yb-category-section .yb-category-card:hover .yb-category-card__explore svg,
-  .yb-category-section .yb-category-card:focus-visible .yb-category-card__explore svg {
-    transform: translateX(3px);
+  /* Overrides the icon's width/height attributes. */
+  .yb-category-split-card__fallback {
+    width: 2.4rem;
+    height: 2.4rem;
   }
 }
 
-.yb-category-section .yb-category-card:focus-visible {
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .yb-category-split-card__content {
+    padding: 0 8px 10px;
+  }
+
+  .yb-category-split-card__title {
+    font-size: 0.82rem;
+    line-height: 1.1;
+  }
+
+  .yb-category-split-card__fallback {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+}
+
+/* --- The split --------------------------------------------------------- */
+
+.yb-category-split-card:focus-visible {
   outline: 2px solid rgba(222, 165, 164, 0.95);
-  outline-offset: 3px;
+  outline-offset: 4px;
 }
 
-/* --- Small screens: vertical movement only, smaller amplitude -------- */
+/* Focus splits the card on every device, including touch. */
+.yb-category-split-card:focus-visible .yb-category-split-card__image {
+  transform: translate3d(calc(-1 * var(--yb-split-x)), calc(-1 * var(--yb-split-y)), 0);
+}
 
-@media (max-width: 599.98px) {
-  .yb-category-section .yb-category-card {
-    padding: 18px;
+.yb-category-split-card:focus-visible .yb-category-split-card__content {
+  transform: translate3d(var(--yb-split-x), var(--yb-split-y), 0);
+}
+
+/* Hover only lives inside a hover-capable media query, because a touch device
+   never fires it. */
+@media (hover: hover) and (pointer: fine) {
+  .yb-category-split-card:hover .yb-category-split-card__image {
+    transform: translate3d(calc(-1 * var(--yb-split-x)), calc(-1 * var(--yb-split-y)), 0);
   }
 
-  .yb-category-section .yb-category-card__image {
-    width: min(100%, 168px);
-    margin-bottom: 15px;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .yb-category-section .yb-category-card__image {
-      transform: translate3d(0, 6px, 0);
-    }
-
-    .yb-category-section .yb-category-card:hover .yb-category-card__image,
-    .yb-category-section .yb-category-card:focus-visible .yb-category-card__image {
-      transform: translate3d(0, -10px, 0);
-    }
-
-    .yb-category-section .yb-category-card:hover .yb-category-card__content,
-    .yb-category-section .yb-category-card:focus-visible .yb-category-card__content {
-      transform: translate3d(0, 10px, 0);
-    }
+  .yb-category-split-card:hover .yb-category-split-card__content {
+    transform: translate3d(var(--yb-split-x), var(--yb-split-y), 0);
   }
 }
 
-/* --- Reduced motion: no movement, nothing hidden -------------------- */
+/* --- Touch: nothing hovers, so park the panels apart for good ------------ */
+
+/* Without this the only way to read a category name on a phone would be to
+   hover, which phones cannot do. Parked apart, the name is permanently
+   legible and the card stays a plain link. */
+@media (hover: none), (pointer: coarse) {
+  .yb-category-split-card__image {
+    transform: translate3d(calc(-1 * var(--yb-split-x)), calc(-1 * var(--yb-split-y)), 0);
+  }
+
+  .yb-category-split-card__content {
+    transform: translate3d(var(--yb-split-x), var(--yb-split-y), 0);
+  }
+}
+
+/* --- Travel distance --------------------------------------------------- */
+
+/* Step down as the container narrows, so the cards do not shrink away to
+   nothing. Every step keeps --yb-card-gap >= 2 x --yb-split-x, which is what
+   stops a hovered card's panels from crossing into its neighbours; the vertical
+   leg is bounded by the row spacing instead. */
+@media (max-width: 1199.98px) {
+  .yb-category-split-shell {
+    --yb-card-gap: 2.25rem;
+    --yb-split-x: 1.125rem;
+    --yb-split-y: 2.75rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .yb-category-split-shell {
+    --yb-card-gap: 2rem;
+    --yb-split-x: 1rem;
+    --yb-split-y: 2.25rem;
+  }
+}
+
+/* One column from here down, so --yb-card-gap no longer separates anything and
+   only the vertical leg matters. */
+@media (max-width: 767.98px) {
+  .yb-category-split-shell {
+    --yb-card-gap: 1.5rem;
+    --yb-split-x: 0px;
+    --yb-split-y: 1.75rem;
+  }
+}
+
+/* --- Narrow screens: vertical split instead of diagonal ------------------ */
+
+@media (max-width: 600px) {
+  .yb-category-split-shell {
+    /* x is already 0 from the single-column breakpoint; restated so the
+       "vertical split" intent survives if that breakpoint moves. */
+    --yb-split-x: 0px;
+    --yb-split-y: 3rem;
+  }
+
+  .yb-category-split-card__title {
+    font-size: 0.98rem;
+  }
+}
+
+/* Landscape phones: the section padding collapses to 32px, which is less than
+   a 3rem travel, so shorten the split to match. */
+@media (max-height: 540px) and (orientation: landscape) {
+  .yb-category-split-shell {
+    --yb-split-y: 1.25rem;
+  }
+}
+
+/* --- Reduced motion: keep the split, drop the movement ------------------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .yb-category-section .yb-category-card,
-  .yb-category-section .yb-category-card__image,
-  .yb-category-section .yb-category-card__content,
-  .yb-category-section .yb-category-card__explore svg {
+  .yb-category-split-card__image,
+  .yb-category-split-card__content {
     transition: none;
-  }
-
-  .yb-category-section .yb-category-card:hover,
-  .yb-category-section .yb-category-card:focus-visible,
-  .yb-category-section .yb-category-card:hover .yb-category-card__image,
-  .yb-category-section .yb-category-card:focus-visible .yb-category-card__image,
-  .yb-category-section .yb-category-card:hover .yb-category-card__content,
-  .yb-category-section .yb-category-card:focus-visible .yb-category-card__content,
-  .yb-category-section .yb-category-card:hover .yb-category-card__explore svg,
-  .yb-category-section .yb-category-card:focus-visible .yb-category-card__explore svg {
-    transform: none;
   }
 }

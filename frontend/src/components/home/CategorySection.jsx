@@ -1,51 +1,69 @@
-import { ArrowRight, Flower2, Gift, Heart, Sparkles, ToyBrick, WandSparkles } from 'lucide-react';
+import { Flower2, Gift, Heart, Sparkles, ToyBrick, WandSparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 /**
- * `image` is optional. Only Crochet Flowers has generated transparent
- * artwork today (`/images/categories/Pastel Crochet Flower Bouquet Cutout.png`).
- * Adding artwork for the remaining collections is a one-line change: drop a
- * PNG into `public/images/categories/` and add the `image` field here.
+ * Created Collections.
  *
- * Never point more than one category at the same file, and never fabricate a
- * placeholder path - cards without artwork fall back to their Lucide icon.
+ * Each card is ONE box holding two absolutely positioned layers that fill
+ * exactly the same rectangle:
+ *
+ *   front  .yb-category-split-card__image    z-index 2
+ *   back   .yb-category-split-card__content  z-index 1
+ *
+ * The artwork panel is opaque and sits on top, so at rest the card reads as
+ * artwork ALONE - the category name is painted underneath and cannot be seen.
+ * Hover (or keyboard focus) sends the artwork up-and-left and the name panel
+ * down-and-right, so the two genuinely part instead of one simply fading. See
+ * "CREATED COLLECTIONS - SPLIT-LAYER CARDS" in crochet.css before changing any
+ * of it: the reveal is sized in relation to the travel distance, and both the
+ * row spacing and the gap between neighbouring cards have to leave room for
+ * the panels to leave the card box.
+ *
+ * The content layer deliberately carries ONLY the category name. There is no
+ * subtitle, description or "Explore" affordance - the reference composition is
+ * a revealed name band, nothing more.
+ *
+ * `image` is optional. Only Crochet Flowers has generated transparent artwork
+ * today (`/images/categories/Pastel Crochet Flower Bouquet Cutout.png`).
+ *
+ * To give another collection its own artwork: drop a transparent PNG into
+ * `public/images/categories/` and add one `image:` line here. Nothing else in
+ * the card needs to change - the two-layer architecture is identical for
+ * artwork and for the icon fallback.
+ *
+ * Never point two categories at the same file, and never add a placeholder
+ * path: a missing image should fall back to the icon, not to a broken frame.
  */
 const categories = [
   {
     title: 'Crochet Flowers',
     slug: 'crochet-flowers',
-    description: 'Soft floral favourites made for gifting and home styling.',
     icon: Flower2,
     image: '/images/categories/Pastel Crochet Flower Bouquet Cutout.png',
   },
   {
     title: 'Soft Toys',
     slug: 'soft-toys',
-    description: 'Cuddly companions and playful charm for all ages.',
     icon: Heart,
   },
   {
     title: 'Keychains',
     slug: 'keychains',
-    description: 'Tiny meaningful keepsakes for bags, keys, and little joys.',
     icon: Gift,
   },
   {
     title: 'Hair Accessories',
     slug: 'hair-accessories',
-    description: 'Pretty crochet clips and little handmade details for everyday style.',
     icon: WandSparkles,
   },
   {
     title: 'Charms',
     slug: 'charms',
-    description: 'Tiny crochet keepsakes to add a sweet handmade touch anywhere.',
     icon: ToyBrick,
   },
   {
     title: 'Handmade Gifts',
     slug: 'handmade-gifts',
-    description: 'Curated cozy finds from the Yarnberri studio collection.',
     icon: Sparkles,
   },
 ];
@@ -55,26 +73,37 @@ const titleId = (slug) => `yb-category-title-${slug}`;
 export default function CategorySection() {
   return (
     <section className="yb-section yb-category-section">
-      <div className="container">
+      <div className="container yb-category-split-shell">
         <div className="yb-section-heading">
           <div className="yb-eyebrow">Created collections</div>
           <h2 className="yb-section-title">Handmade pieces for everyday little joys</h2>
         </div>
 
-        <div className="row g-4">
-          {categories.map(({ title, slug, description, icon: Icon, image }) => (
-            <div key={slug} className="col-12 col-md-6 col-lg-4">
+        {/* Column counts only - the split itself is pure CSS. All 6 cards sit on one
+            horizontal line from lg up (~170px each in a 1320px container,
+            ~115px in a 960px one) and step down to 2 per line on phones. */}
+        <div className="row g-4 yb-category-split-grid">
+          {categories.map(({ title, slug, icon: Icon, image }) => (
+            <div key={slug} className="col-12 col-md-6 col-lg-2">
               <Link
                 to={`/shop?category=${slug}`}
-                className="yb-category-card"
+                className="yb-category-split-card"
                 aria-labelledby={titleId(slug)}
               >
-                {/* Front layer: artwork panel. Opaque, so it sits above the
-                    content layer and can lift away from it on hover. */}
-                <span className="yb-category-card__image">
+                {/* Back layer. Painted underneath the artwork panel and fully
+                    covered by it at rest, so the name only becomes visible once
+                    the two layers separate. */}
+                <div className="yb-category-split-card__content">
+                  <h3 className="yb-category-split-card__title" id={titleId(slug)}>
+                    {title}
+                  </h3>
+                </div>
+
+                {/* Front layer. */}
+                <div className="yb-category-split-card__image">
                   {image ? (
                     <img
-                      className="yb-category-card__artwork"
+                      className="yb-category-split-card__artwork"
                       src={image}
                       alt={title}
                       loading="lazy"
@@ -82,28 +111,13 @@ export default function CategorySection() {
                     />
                   ) : (
                     <Icon
-                      className="yb-category-card__fallback"
-                      size={46}
-                      strokeWidth={1.4}
+                      className="yb-category-split-card__fallback"
+                      size={54}
+                      strokeWidth={1.3}
                       aria-hidden="true"
                     />
                   )}
-                </span>
-
-                {/* Rear layer: the card face. Always painted underneath the
-                    artwork panel and never fully hidden, so the collection
-                    is readable without hovering. */}
-                <span className="yb-category-card__content">
-                  <span className="yb-category-card__flourish" aria-hidden="true" />
-                  <span className="yb-category-card__title" id={titleId(slug)}>
-                    {title}
-                  </span>
-                  <span className="yb-category-card__description">{description}</span>
-                  <span className="yb-category-card__explore">
-                    Explore
-                    <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
-                  </span>
-                </span>
+                </div>
               </Link>
             </div>
           ))}
