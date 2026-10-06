@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
+import LogoutDialog from "../common/LogoutDialog";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
@@ -294,14 +295,18 @@ export default function AppLayout({ children }) {
                     </Link>
                   )}
 
-                  <button
-                    type="button"
-                    className="yb-logout-btn"
-                    onClick={logout}
-                    aria-label="Logout"
-                  >
-                    <LogOut size={17} />
-                  </button>
+                  <LogoutDialog>
+                    {/* The caller supplies the trigger so the same dialog can
+                        also be opened from the mobile menu, where there is no
+                        room for an icon button. */}
+                    <button
+                      type="button"
+                      className="yb-logout-btn"
+                      aria-label="Sign out"
+                    >
+                      <LogOut size={17} />
+                    </button>
+                  </LogoutDialog>
                 </>
               ) : (
                 <Link to="/login" className="yb-login-btn" aria-label="Sign in">
@@ -368,6 +373,32 @@ export default function AppLayout({ children }) {
                 >
                   My Account
                 </Link>
+              )}
+
+              {/* Admin is also hidden from the header below 992px, so without
+                  this row an admin has no way into the workspace on a phone. */}
+              {user?.role === "admin" && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="yb-mobile-nav-link"
+                >
+                  Admin workspace
+                </Link>
+              )}
+
+              {/* The sign-out row. The header's logout button is `display:
+                  none` below 992px, and this menu previously had no
+                  substitute, so on a phone a signed-in user could not sign out
+                  at all. `onSignedOut` closes the menu only AFTER the sign-out,
+                  so the panel never lingers over a signed-in header. */}
+              {user && (
+                <LogoutDialog onSignedOut={() => setMobileOpen(false)}>
+                  <button type="button" className="yb-mobile-signout">
+                    <LogOut size={17} strokeWidth={1.8} />
+                    Sign out
+                  </button>
+                </LogoutDialog>
               )}
             </div>
           )}

@@ -72,64 +72,59 @@ export default function HeroSection() {
   const showProgress = !prefersReducedMotion && !isPaused;
 
   return (
-    <section className="yb-home-hero yb-section">
-      <div className="container">
-        <div className="row align-items-center g-4 g-lg-5">
-          <div className="col-lg-6">
-            <div className="yb-eyebrow">
-              <Sparkles size={14} />
-              Handmade crochet boutique
-            </div>
+    /* ART DIRECTION
+       -------------
+       The hero is a two-column editorial spread: the copy sits in a
+       narrower left rail and the carousel occupies a wider right column.
 
-            <h1 className="yb-hero-title">
-              Little handmade things,
-              <span>made to make you smile.</span>
-            </h1>
+       The copy used to be centred in a 760px box under a full-bleed band,
+       which left roughly 280px of dead space on either side at 1440px and
+       read as a generic centred landing page. Left-aligning it against a
+       shared rail - so the eyebrow, headline and plate all start on the
+       same line - is what makes the composition feel deliberate.
 
-            <p className="yb-hero-copy">
-              Small-batch crochet keepsakes and thoughtful gifts, made slowly to bring a little
-              handmade joy to everyday moments.
-            </p>
+       `.yb-hero-intro` is the grid itself and carries the rail as a margin,
+       replacing the old `.container`. A Bootstrap container centres itself
+       at a fixed max-width, so the plate could never have shared an edge
+       with the headline; owning the rail here is what keeps them aligned at
+       every breakpoint.
 
-            <div className="yb-hero-actions">
-              <Link to="/shop" className="yb-btn yb-btn-primary">
-                Shop the collection
-                <ArrowRight size={16} />
-              </Link>
-              <Link to="/shop" className="yb-btn yb-btn-outline">
-                Discover handmade
-              </Link>
-            </div>
+       DOM order is plate -> copy -> values so that on narrow screens, where
+       this collapses to a single column, the reading order matches the
+       visual order. On wide screens the copy moves to the left column and
+       the plate to the right. */
+    <section className="yb-home-hero">
+      {/* `container` is what aligns this hero with the sections below: the
+          category section's left edge is set by Bootstrap's container
+          max-width stepping (1280 / 1140 / 960 / 720) plus its own shell
+          padding, so it moves in jumps as the viewport resizes. Inheriting
+          the same class makes the two left edges identical at every width,
+          which a `vw` formula could only ever approximate. */}
+      <div className="container yb-hero-shell">
+        <div className="yb-hero-stage">
+          <div
+            className="yb-hero-visual"
+            aria-label="Handmade crochet and gifting inspiration"
+            onMouseEnter={pauseAutoplay}
+            onMouseLeave={resumeAutoplay}
+            onFocusCapture={pauseAutoplay}
+            onBlurCapture={resumeAutoplay}
+          >
+            <Flower2 className="yb-hero-flower" size={25} aria-hidden="true" />
 
-            <ul className="yb-hero-meta">
-              <li>
-                <strong>Handmade</strong> with love
-              </li>
-              <li>
-                <strong>Gift-ready</strong> pieces
-              </li>
-              <li>
-                <strong>Soft</strong> crochet charm
-              </li>
-            </ul>
-          </div>
-
-          <div className="col-lg-6">
             <div
-              className="yb-hero-visual"
-              aria-label="Handmade crochet and gifting inspiration"
-              onMouseEnter={pauseAutoplay}
-              onMouseLeave={resumeAutoplay}
-              onFocusCapture={pauseAutoplay}
-              onBlurCapture={resumeAutoplay}
+              className="yb-hero-slider"
+              role="region"
+              aria-roledescription="carousel"
+              aria-label="Featured Yarnberri imagery"
             >
-              <Flower2 className="yb-hero-flower" size={25} aria-hidden="true" />
-
+              {/* A real track: the slides sit side by side and the track is
+                  translated one slide-width at a time. Percentage offsets are
+                  relative to the TRACK's own width, which is exactly one slide,
+                  so `-${index * 100}%` advances precisely one slide. */}
               <div
-                className="yb-hero-slider"
-                role="region"
-                aria-roledescription="carousel"
-                aria-label="Featured Yarnberri imagery"
+                className="yb-hero-track"
+                style={{ transform: `translateX(-${currentSlideIndex * 100}%)` }}
               >
                 {heroSlides.map((slide, index) => (
                   <div
@@ -143,61 +138,107 @@ export default function HeroSection() {
                     <img
                       src={slide.src}
                       alt={slide.alt}
-                      loading={index === currentSlideIndex ? 'eager' : 'lazy'}
+                      /* All three are `eager`. In the old crossfade the
+                         offscreen slides were stacked and invisible, so
+                         `lazy` was safe. In a track they sit just off to
+                         the side of the viewport, which is close enough
+                         that a lazy image can still be blank when the
+                         slide animates in. Three images is not worth
+                         deferring - and the first is the LCP element. */
+                      loading="eager"
                       decoding="async"
                     />
                   </div>
                 ))}
-
-                {/* Keeps the caption readable over pale, busy photography. */}
-                <div className="yb-hero-scrim" aria-hidden="true" />
-
-                <button
-                  type="button"
-                  className="yb-slider-button yb-slider-prev"
-                  onClick={() => goToSlide(currentSlideIndex - 1)}
-                  aria-label="Previous slide"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="yb-slider-button yb-slider-next"
-                  onClick={() => goToSlide(currentSlideIndex + 1)}
-                  aria-label="Next slide"
-                >
-                  <ChevronRight size={18} />
-                </button>
-
-                <div className="yb-slider-dots" aria-label="Slide navigation">
-                  {heroSlides.map((slide, index) => (
-                    <button
-                      key={`${slide.alt}-dot`}
-                      type="button"
-                      className={`yb-slider-dot ${index === currentSlideIndex ? 'active' : ''}`}
-                      onClick={() => goToSlide(index)}
-                      aria-label={`Show slide ${index + 1}: ${slide.caption}`}
-                      aria-current={index === currentSlideIndex ? 'true' : undefined}
-                    />
-                  ))}
-                </div>
-
-                <div className="yb-hero-caption" aria-live="polite">
-                  <span className="yb-hero-caption-count">
-                    {String(currentSlideIndex + 1).padStart(2, '0')}
-                    <span aria-hidden="true"> / </span>
-                    {String(heroSlides.length).padStart(2, '0')}
-                  </span>
-                  <span className="yb-hero-caption-text">{currentSlide.caption}</span>
-                </div>
-
-                {showProgress && (
-                  <span className="yb-hero-progress" key={currentSlideIndex} aria-hidden="true" />
-                )}
               </div>
+
+              {/* Keeps the caption readable over pale, busy photography. */}
+              <div className="yb-hero-scrim" aria-hidden="true" />
+
+              <button
+                type="button"
+                className="yb-slider-button yb-slider-prev"
+                onClick={() => goToSlide(currentSlideIndex - 1)}
+                aria-label="Previous slide"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                className="yb-slider-button yb-slider-next"
+                onClick={() => goToSlide(currentSlideIndex + 1)}
+                aria-label="Next slide"
+              >
+                <ChevronRight size={18} />
+              </button>
+
+              <div className="yb-slider-dots" aria-label="Slide navigation">
+                {heroSlides.map((slide, index) => (
+                  <button
+                    key={`${slide.alt}-dot`}
+                    type="button"
+                    className={`yb-slider-dot ${index === currentSlideIndex ? 'active' : ''}`}
+                    onClick={() => goToSlide(index)}
+                    aria-label={`Show slide ${index + 1}: ${slide.caption}`}
+                    aria-current={index === currentSlideIndex ? 'true' : undefined}
+                  />
+                ))}
+              </div>
+
+              <div className="yb-hero-caption" aria-live="polite">
+                <span className="yb-hero-caption-count">
+                  {String(currentSlideIndex + 1).padStart(2, '0')}
+                  <span aria-hidden="true"> / </span>
+                  {String(heroSlides.length).padStart(2, '0')}
+                </span>
+                <span className="yb-hero-caption-text">{currentSlide.caption}</span>
+              </div>
+
+              {showProgress && (
+                <span className="yb-hero-progress" key={currentSlideIndex} aria-hidden="true" />
+              )}
             </div>
           </div>
         </div>
+
+        <div className="yb-hero-lead">
+          <div className="yb-eyebrow">
+            <Sparkles size={14} />
+            Handmade crochet boutique
+          </div>
+
+          <h1 className="yb-hero-title">
+            Little handmade things,
+            <span>made to make you smile.</span>
+          </h1>
+
+          <p className="yb-hero-copy">
+            Small-batch crochet keepsakes and thoughtful gifts, made slowly to bring a little
+            handmade joy to everyday moments.
+          </p>
+
+          <div className="yb-hero-actions">
+            <Link to="/shop" className="yb-btn yb-btn-primary">
+              Shop the collection
+              <ArrowRight size={16} />
+            </Link>
+            <Link to="/shop" className="yb-btn yb-btn-outline">
+              Discover handmade
+            </Link>
+          </div>
+        </div>
+
+        <ul className="yb-hero-meta">
+          <li>
+            <strong>Handmade</strong> with love
+          </li>
+          <li>
+            <strong>Gift-ready</strong> pieces
+          </li>
+          <li>
+            <strong>Soft</strong> crochet charm
+          </li>
+        </ul>
       </div>
     </section>
   );

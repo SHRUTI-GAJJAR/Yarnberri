@@ -1,5 +1,6 @@
-import { ArrowRight, Flower2, Gift, Heart, Sparkles, ToyBrick, WandSparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { categories } from '../../data/categories';
 
 /**
  * Created Collections.
@@ -24,55 +25,13 @@ import { Link } from 'react-router-dom';
  * description: the arrow is the entire affordance, saying "this leads to the
  * category" without describing anything about the product.
  *
- * `image` is optional. Only Crochet Flowers has generated transparent artwork
- * today (`/images/categories/Pastel Crochet Flower Bouquet Cutout.png`).
+ * The collection list itself lives in src/data/categories.js, shared with the
+ * shop page filter pills so the two can never disagree about which collections
+ * exist or what they look like.
  *
- * To give another collection its own artwork: drop a transparent PNG into
- * `public/images/categories/` and add one `image:` line here. Nothing else in
- * the card needs to change - the two-layer architecture is identical for
- * artwork and for the icon fallback.
- *
- * Never point two categories at the same file, and never add a placeholder
- * path: a missing image should fall back to the icon, not to a broken frame.
+ * `image` is optional per collection. When it is absent the card falls back to
+ * the entry's `icon` rather than rendering a broken frame.
  */
-const categories = [
-  {
-    title: 'Crochet Flowers',
-    slug: 'crochet-flowers',
-    icon: Flower2,
-    image: '/images/categories/Pastel Crochet Flower Bouquet Cutout.png',
-  },
-  {
-    title: 'Soft Toys',
-    slug: 'soft-toys',
-    icon: Heart,
-    image: '/images/categories/Amigurumi Friends Crochet Plush Collection.png',
-  },
-  {
-    title: 'Keychains',
-    slug: 'keychains',
-    icon: Gift,
-    image: '/images/categories/Keychain_category_image.png',
-  },
-  {
-    title: 'Hair Accessories',
-    slug: 'hair-accessories',
-    icon: WandSparkles,
-    image: '/images/categories/hair_aces_category.png',
-  },
-  {
-    title: 'Charms',
-    slug: 'charms',
-    icon: ToyBrick,
-    image: '/images/categories/Pastel Crochet Flower Bouquet Cutout.png',
-  },
-  {
-    title: 'Handmade Gifts',
-    slug: 'handmade-gifts',
-    icon: Sparkles,
-    image: '/images/categories/Pastel Crochet Flower Bouquet Cutout.png',
-  },
-];
 
 const titleId = (slug) => `yb-category-title-${slug}`;
 

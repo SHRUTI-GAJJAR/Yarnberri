@@ -9,15 +9,22 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { categories as collections, categoryThumbs } from '../../data/categories';
 
-const supportedCategories = [
-  'crochet-flowers',
-  'soft-toys',
-  'keychains',
-  'hair-accessories',
-  'charms',
-  'handmade-gifts',
-];
+// Slugs shown as filter pills. These come from the shared collection list, so
+// this page and the home page cards always agree on which collections exist.
+const supportedCategories = collections.map((collection) => collection.slug);
+
+/**
+ * Categories deliberately kept out of the filter row.
+ *
+ * Nothing is hidden right now - the 'Crochet Flowers' duplicate was fixed at the
+ * source instead, by giving that collection the 'flowers' slug the backend
+ * actually stores (see data/categories.js). Kept as a named set rather than an
+ * inline check so a future category can be retired without re-reading the whole
+ * memo above.
+ */
+const hiddenCategories = new Set();
 
 const formatCategory = (value) =>
   String(value || 'Handmade')
@@ -69,7 +76,9 @@ export default function ShopPage() {
 
   const categories = useMemo(() => {
     const unique = [...new Set(products.map((product) => product.category).filter(Boolean))];
-    return ['All', ...new Set([...supportedCategories, ...unique])];
+    return ['All', ...new Set([...supportedCategories, ...unique])].filter(
+      (category) => !hiddenCategories.has(category)
+    );
   }, [products]);
 
   const requestedCategory = searchParams.get('category');
@@ -220,17 +229,40 @@ export default function ShopPage() {
           </form>
 
           <div className="yb-filter-pills" aria-label="Filter products by category">
-            {categories.map((category) => (
-              <button
-                key={category}
-                type="button"
-                className={`yb-filter-pill ${selectedCategory === category ? 'active' : ''}`}
-                onClick={() => handleCategoryChange(category)}
-                aria-pressed={selectedCategory === category}
-              >
-                {category === 'All' ? 'All' : formatCategory(category)}
-              </button>
-            ))}
+            {categories.map((category) => {
+              // 'All' is a pseudo-category and has no artwork. Any other slug
+              // without a thumbnail is a category that only exists in the
+              // database (categories added via the admin dashboard before this
+              // artwork existed) - it renders as a text-only pill rather than a
+              // broken image.
+              const thumb = category === 'All' ? undefined : categoryThumbs[category];
+
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  className={`yb-filter-pill ${selectedCategory === category ? 'active' : ''}`}
+                  onClick={() => handleCategoryChange(category)}
+                  aria-pressed={selectedCategory === category}
+                >
+                  {thumb && (
+                    <img
+                      className="yb-filter-pill__icon"
+                      src={thumb}
+                      alt=""
+                      aria-hidden="true"
+                      width="20"
+                      height="20"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                  <span className="yb-filter-pill__label">
+                    {category === 'All' ? 'All' : formatCategory(category)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -359,7 +359,7 @@
 
 .yb-product-image {
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--yb-cream-soft);
 }
 
@@ -780,19 +780,59 @@
   padding-top: 20px;
 }
 
+/* This element also carries `.yb-section-heading`, which caps
+   `max-width` at 760px. That measure is sized for a standalone
+   centred heading; applied to this row it caps the ROW rather than
+   the text, so the title and the trailing link are left sharing
+   760px between them and both wrap. The row spans the container
+   here instead, and the title below carries the measure. */
 .yb-featured-heading {
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 24px;
+  max-width: none;
+}
+
+/* Sized to hold one line from about 1000px up. At the shared
+   `.yb-section-title` ceiling of 3.1rem the full string needs about
+   775px, which overflows the space left beside the link between
+   roughly 1000px and 1250px and snaps to two lines - the awkward
+   break this heading is trying to avoid. Below that it may still
+   wrap, and `balance` makes the two lines even when it does. */
+.yb-featured-heading .yb-section-title {
+  font-size: clamp(2.05rem, 3.4vw, 2.9rem);
+  text-wrap: balance;
 }
 
 .yb-inline-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  /* Never let a trailing action break onto a second line: these are
+     all two or three word links, so wrapping only ever looks like a
+     mistake. `0 0 auto` stops the row squeezing it to force that. */
+  flex: 0 0 auto;
+  white-space: nowrap;
   color: var(--yb-brown);
   font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+/* Rose on hover, and the arrow steps out - both lifted from the nav
+   link (:2462) and the hero CTA, so this control answers the mouse
+   the same way as the rest of the header. */
+.yb-inline-link:hover {
+  color: #dea5a4;
+}
+
+.yb-inline-link svg {
+  transition: transform 0.22s ease;
+}
+
+.yb-inline-link:hover svg,
+.yb-inline-link:focus-visible svg {
+  transform: translateX(3px);
 }
 
  .yb-product-card {
@@ -800,7 +840,7 @@
   display: block;
   height: 100%;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 0;
   background:
     linear-gradient(
       145deg,
@@ -836,7 +876,7 @@
 .yb-product-image {
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 0;
   margin: 10px 10px 0;
   background: var(--yb-cream-soft);
 }
@@ -1198,35 +1238,82 @@
 .yb-chip {
   display: inline-flex;
   align-items: center;
-  padding: 6px 10px;
+  padding: 5px 11px;
   border-radius: 999px;
-  background: rgba(113, 139, 88, 0.12);
-  color: var(--yb-green);
-  font-size: 0.72rem;
+  background: rgba(113, 139, 88, 0.13);
+  /* Deliberately darker than --yb-green. The lighter tone only reached
+     about 3.5:1 against this tint, which is short of the 4.5:1 that
+     small bold text needs. */
+  color: #4f6438;
+  font-size: 0.71rem;
   font-weight: 700;
+  letter-spacing: 0.015em;
   white-space: nowrap;
 }
 
 .yb-product-price {
   color: var(--yb-brown);
   font-weight: 700;
-  font-size: 1.02rem;
+  font-size: 1.06rem;
+  /* Tabular figures line the rupee amounts up across a row of cards
+     instead of each one drifting with its own digit widths. */
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
 .yb-product-card h3 {
-  margin: 0 0 12px;
+  /* No bottom margin: `.yb-product-meta` carries the gap now that it
+     has a rule of its own above it. */
+  margin: 0;
   font-size: 1.4rem;
-  line-height: 1.25;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  /* Two lines, then an ellipsis. Without the cap a long name wraps to
+     three and knocks that card's footer out of line with its
+     neighbours. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* Evens out the ragging on a wrapped title against a short one. */
+  text-wrap: balance;
 }
 
+/* A hairline turns this row into a footer, so the stock and category
+   read as supporting detail rather than as part of the title block. */
 .yb-product-meta {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--yb-border);
   color: var(--yb-brown-light);
   font-size: 0.8rem;
+  line-height: 1.4;
+  letter-spacing: 0.005em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Each end truncates rather than wrapping, so the footer keeps a single
+   line height however long the category is. */
+.yb-product-meta > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yb-product-meta > span:first-child {
+  flex: 0 0 auto;
+}
+
+.yb-product-meta > span:last-child {
+  text-align: right;
 }
 
 /* =========================================
@@ -1234,12 +1321,12 @@
    ========================================= */
 
 .yb-home-page .yb-product-card {
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: 0 5px 16px rgba(90, 61, 53, 0.055);
 }
 
 .yb-home-page .yb-product-image {
-  border-radius: 10px;
+  border-radius: 0;
   box-shadow: none;
 }
 
@@ -2547,6 +2634,59 @@ button:focus-visible {
   color: var(--yb-brown);
 }
 
+/* --- Mobile sign-out row ------------------------------------------------ */
+
+/* A `<button>` sitting in a list of `<a>` links, so it needs four things the
+   links never did:
+
+     - `display: flex` + `align-items` + `gap` to line the icon up with the
+       label. The links are inline, so they had no such requirement.
+     - `width: 100%`, or the button shrink-wraps its label and sits as a
+       narrow chip at the left instead of filling the row like every other item.
+     - `text-align: left` and `font: inherit`. A button inherits neither from
+       the page, so without these the label renders in the UA's default font and
+       centres itself - visibly unlike the links above it.
+     - `cursor: pointer`, restated because `font` above does not reset it, but
+       globals.css only reaches `button` by element selector and this class is
+       the one place the intent is actually being made explicit.
+
+   The border-left, padding and colours all come from `.yb-mobile-nav-link`,
+   which is also applied here so the row matches its neighbours exactly.
+
+   Deliberately NOT given a rose tint or red text: it is a navigation row, and
+   the dialog it opens is where the decision is confirmed. Colouring the row as
+   dangerous would imply clicking it does something irreversible on the spot. */
+.yb-mobile-signout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 10px;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--yb-brown-light);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.yb-mobile-signout:hover,
+.yb-mobile-signout:focus-visible {
+  border-left-color: #dea5a4;
+  background: rgba(222, 165, 164, 0.1);
+  color: var(--yb-brown);
+}
+
+.yb-mobile-signout svg {
+  flex: 0 0 auto;
+}
+
 .yb-header a:focus-visible,
 .yb-header button:focus-visible {
   outline: 2px solid #dea5a4;
@@ -2814,17 +2954,10 @@ button:focus-visible {
   background-size: cover;
 }
 
-.yb-home-page .yb-moment-card:nth-child(1) .yb-moment-art {
-  background-image: url("/images/home-slides/slide-1-brand.png");
-}
-
-.yb-home-page .yb-moment-card:nth-child(2) .yb-moment-art {
-  background-image: url("/images/home-slides/slide-2-flowers.png");
-}
-
-.yb-home-page .yb-moment-card:nth-child(3) .yb-moment-art {
-  background-image: url("/images/home-slides/slide-3-gifts.png");
-}
+/* The per-card `background-image` rules that used to live here are gone. Each
+   `.yb-moment-art` is now a wrapper holding a real `<img>`, with the image and
+   its crop ratio declared once in BrandMomentSection's `moments` array. See
+   "MOODBOARD + CTA REFRESH" at the end of this file. */
 
 .yb-home-page .yb-cta-shell {
   padding: 26px 24px;
@@ -3062,6 +3195,56 @@ button:focus-visible {
   border-color: var(--yb-shop-pink);
   background: rgba(222, 165, 164, 0.17);
   color: var(--yb-brown);
+}
+
+/* Category icon inside a filter pill.
+
+   The pill was a bare text button, so it has no internal layout at all. Adding
+   an image means it now needs one: `inline-flex` with a centred row, and a gap
+   to separate the icon from the label. `white-space: nowrap` is kept so the
+   label never wraps, which matters more now that the pill is two elements.
+
+   The icon is a 96 px source scaled down to 20 px, so it is still 4x oversampled
+   at 1x density. The thumbnails are cropped to the artwork with a small
+   transparent margin (see scripts/make-category-thumbs.py), which is why the
+   artwork needs no extra inset padding here - adding more would push the
+   artwork away from the label by more than it looks like it should be.
+
+   `filter` is deliberately absent. The artwork is already pastel, and grading it
+   toward the brand pink on hover (the sort of thing a greyscale + sepia hover
+   does elsewhere on this site) would turn the icons muddy the moment the pill
+   is interacted with. Only the pill's own background and border colour change. */
+.yb-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.yb-filter-pill__icon {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.yb-filter-pill__label {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* On the smallest layout the pill row scrolls horizontally instead of wrapping,
+   so each pill needs to stay compact. 18 px keeps the icon legible while
+   returning roughly the space the label gave up. */
+@media (max-width: 575px) {
+  .yb-filter-pill {
+    gap: 6px;
+  }
+
+  .yb-filter-pill__icon {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 .yb-shop-grid {
@@ -4373,13 +4556,19 @@ button:focus-visible {
 
 .yb-home-page .yb-brand-section .yb-feature-card {
   position: relative;
-  min-height: 224px;
+  /* No `min-height`. The Bootstrap columns already stretch to an equal
+     height, so the cap was only ever adding dead space under every
+     card - most visible at the bottom, where roughly 60px of the box
+     sat below the last line of copy. */
   height: 100%;
-  padding: 24px 22px 22px;
+  padding: 26px 24px 28px;
   overflow: hidden;
   border: 1px solid rgba(234, 219, 210, 0.88);
-  border-radius: 12px;
-  background: linear-gradient(145deg, #fffefa, rgba(255, 244, 234, 0.86));
+  border-radius: 0;
+  /* One warm surface for all four cards. These were alternating cream
+     and sage by `nth-child` below; the green pair had no green content
+     to justify them, so the row read as two sets rather than one. */
+  background: linear-gradient(155deg, #fffefa 0%, rgba(255, 246, 238, 0.92) 100%);
   box-shadow: 0 5px 15px rgba(90, 61, 53, 0.055);
   transition:
     transform 220ms ease,
@@ -4395,44 +4584,57 @@ button:focus-visible {
   width: 112px;
   height: 112px;
   border-radius: 50%;
-  background: rgba(222, 165, 164, 0.11);
+  background: rgba(222, 165, 164, 0.13);
   pointer-events: none;
-}
-
-.yb-home-page .yb-brand-section .row > div:nth-child(4n + 2) .yb-feature-card,
-.yb-home-page .yb-brand-section .row > div:nth-child(4n + 4) .yb-feature-card {
-  background: linear-gradient(145deg, #fffefa, rgba(232, 239, 223, 0.62));
-}
-
-.yb-home-page .yb-brand-section .row > div:nth-child(4n + 2) .yb-feature-card::before,
-.yb-home-page .yb-brand-section .row > div:nth-child(4n + 4) .yb-feature-card::before {
-  background: rgba(113, 139, 88, 0.09);
+  /* The corner wash is the only soft shape on the card, so it is the
+     one element that carries the movement without introducing a second
+     colour into the row. Sits small and faint at rest. */
+  opacity: 0.7;
+  transform: scale(0.84);
+  transition:
+    opacity 420ms ease,
+    transform 460ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .yb-home-page .yb-brand-section .yb-feature-card:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   border-color: rgba(222, 165, 164, 0.62);
-  box-shadow: 0 7px 18px rgba(90, 61, 53, 0.075);
+  box-shadow: 0 12px 26px rgba(90, 61, 53, 0.09);
+}
+
+.yb-home-page .yb-brand-section .yb-feature-card:hover::before {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .yb-home-page .yb-brand-section .yb-feature-icon {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 52px;
   height: 52px;
   border: 1px solid rgba(234, 219, 210, 0.78);
   border-radius: 12px 12px 12px 5px;
-  background: linear-gradient(145deg, rgba(253, 231, 239, 0.95), rgba(255, 244, 234, 0.9));
+  /* Flat tints rather than a gradient: `background-color` is the only
+     one of the two that transitions, so a gradient here would snap on
+     hover instead of fading. */
+  background: rgba(253, 231, 239, 0.85);
   color: var(--yb-brown);
-  transition: transform 220ms ease;
-}
-
-.yb-home-page .yb-brand-section .row > div:nth-child(4n + 2) .yb-feature-icon,
-.yb-home-page .yb-brand-section .row > div:nth-child(4n + 4) .yb-feature-icon {
-  background: linear-gradient(145deg, rgba(232, 239, 223, 0.95), rgba(255, 244, 234, 0.92));
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .yb-home-page .yb-brand-section .yb-feature-card:hover .yb-feature-icon {
-  transform: translateY(-1px) rotate(-3deg);
+  /* The old rule tilted the chip `rotate(-3deg)`. That was the one
+     gesture in the row that read as decorative rather than as a
+     response, so it is a plain lift and a fill now. */
+  transform: translateY(-2px);
+  border-color: rgba(222, 165, 164, 0.7);
+  background: rgba(222, 165, 164, 0.26);
 }
 
 @media (min-width: 576px) and (max-width: 1199.98px) {
@@ -4478,9 +4680,20 @@ button:focus-visible {
 
 .yb-home-page .yb-brand-section .yb-feature-card h3 {
   position: relative;
-  margin: 16px 0 8px;
+  margin: 18px 0 8px;
   font-size: 1.22rem;
-  line-height: 1.28;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+  /* Evens the rag on a title that wraps, so a two-line heading does
+     not sit lopsided against a one-line neighbour. */
+  text-wrap: balance;
+  transition: color 0.2s ease;
+}
+
+/* Rose on hover - the same move as `.yb-nav-link` and the product cards,
+   so every card on the page answers the mouse the same way. */
+.yb-home-page .yb-brand-section .yb-feature-card:hover h3 {
+  color: #dea5a4;
 }
 
 .yb-home-page .yb-brand-section .yb-feature-card p {
@@ -4488,7 +4701,12 @@ button:focus-visible {
   margin: 0;
   color: var(--yb-brown-light);
   font-size: 0.92rem;
-  line-height: 1.65;
+  /* 1.65 was loose for a two-line paragraph at this size, and the extra
+     leading left the block looking unfinished against the tightly-set
+     heading above it. */
+  line-height: 1.62;
+  /* Evens out the last line instead of leaving it one short word. */
+  text-wrap: pretty;
 }
 
 @media (max-width: 991px) {
@@ -4523,7 +4741,7 @@ button:focus-visible {
   .yb-home-page .yb-brand-section .yb-feature-card {
     min-height: 0;
     padding: 20px 19px;
-    border-radius: 10px;
+    border-radius: 0;
   }
 
   .yb-home-page .yb-brand-section .yb-feature-card h3 {
@@ -4537,7 +4755,8 @@ button:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .yb-home-page .yb-brand-section .yb-feature-card,
-  .yb-home-page .yb-brand-section .yb-feature-icon {
+  .yb-home-page .yb-brand-section .yb-feature-icon,
+  .yb-home-page .yb-brand-section .yb-feature-card::before {
     transition: none;
   }
 
@@ -4545,6 +4764,18 @@ button:focus-visible {
   .yb-home-page .yb-brand-section .yb-feature-card:hover .yb-feature-icon {
     transform: none;
   }
+
+  /* The corner wash still changes tint on hover - it just arrives at
+     its full size instead of growing into it. Dropping it entirely
+     would leave the top-right corner visibly emptier than the other
+     three, which is worse than having no animation at all. */
+  .yb-home-page .yb-brand-section .yb-feature-card:hover::before {
+    transform: none;
+  }
+
+  /* The title colour is instant state feedback rather than movement,
+     so it stays - it is how a keyboard user knows which card is
+     focused. */
 }
 
 /* Expandable, accessible navbar actions */
@@ -6740,4 +6971,2111 @@ button:focus-visible {
   .yb-nav-link::after {
     transition: none;
   }
+}
+
+/* =========================================
+   HOMEPAGE HERO - FULL-BLEED SLIDER
+   -------------------------------------------------
+   Appended last so it wins over the four earlier hero
+   layers (base, home editorial, tablet/phone passes)
+   without rewriting any of them.
+
+   WHAT CHANGED
+   ------------
+   The hero was a `col-lg-6` text block beside a
+   `col-lg-6` slider. It is now stacked: the slider is
+   the first thing on the page and spans the full
+   viewport width, and the eyebrow / headline / copy /
+   CTAs / feature row sit UNDERNEATH it, centred, inside
+   the normal `.container`.
+
+   Two structural consequences:
+
+   1. `.yb-home-hero` no longer carries `.yb-section`, so
+      the section padding is gone. The slider wants to
+      touch the header, so it gets none at all; the intro
+      block owns the vertical rhythm from here down.
+
+   2. The slider is a direct child of the section, not of
+      `.container`, so it is no longer width-capped at
+      1320px. That is what makes it read as a hero.
+
+   Height is a clamp on the ASPECT RATIO rather than a
+   px min-height: a full-width 16/9 would be ~810px tall
+   on a 1440px screen and push everything below the fold,
+   so the band gets progressively wider than 16/9 as the
+   viewport grows, and a `max-height` caps the very wide
+   case where even that is too much.
+   ========================================= */
+
+/* --- The band: edge to edge, no padding ------------------------------ */
+
+.yb-home-page .yb-home-hero {
+  /* No top padding: the image butts straight into the header. */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.yb-home-page .yb-home-hero .yb-hero-visual {
+  width: 100%;
+  /* Wider than 16/9 on large screens so the band stays a
+     band. A `max-height` then stops it dominating tall,
+     wide monitors. */
+  aspect-ratio: clamp(16 / 9, 100vw / 620, 32 / 9);
+  max-height: min(72vh, 620px);
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.yb-home-page .yb-home-hero .yb-hero-slider {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: inherit;
+}
+
+/* Keeps the scroll-to-top shadow off now that the image is
+   the first thing under the header. */
+.yb-home-page .yb-yarn-divider {
+  display: none;
+}
+
+/* --- The intro: centred, under the slider ---------------------------- */
+
+/* This element is also a Bootstrap `.container`, so its `max-width` and
+   `margin-inline: auto` are what align the hero's left edge with the
+   sections below. The `760px` cap and the explicit `auto` margins that
+   used to sit here are gone: the cap squeezed the two columns into a
+   strip down the middle of the page, and re-declaring the margins
+   cancelled the container's own centring, which pushed the copy out to
+   364px from the viewport edge at 1440. Everything horizontal is now
+   handled by `padding-inline` further down, because any margin here
+   would overwrite the centring again. */
+.yb-hero-shell {
+  padding-top: 0;
+  padding-bottom: 0;
+  text-align: center;
+}
+
+/* The eyebrow is an inline-flex chip, so centring the block
+   leaves it hugging the left of its own box. */
+.yb-home-page .yb-hero-shell .yb-eyebrow {
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-title {
+  max-width: none;
+  margin-bottom: 20px;
+  font-size: clamp(2.35rem, 4.6vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-copy {
+  max-width: 600px;
+  margin: 0 auto 30px;
+  font-size: 1.05rem;
+  line-height: 1.78;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-actions {
+  justify-content: center;
+  margin-bottom: 26px;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-meta {
+  justify-content: center;
+  gap: 10px 26px;
+}
+
+/* --- Wider band on large screens ------------------------------------- */
+
+@media (min-width: 1400px) {
+  .yb-home-page .yb-home-hero .yb-hero-visual {
+    max-height: min(70vh, 660px);
+  }
+}
+
+/* --- Tablets: back to a calmer ratio --------------------------------- */
+
+/* Below 992px there is no vertical space to give away, and the
+   earlier passes already step the band down for phones. */
+@media (max-width: 991.98px) {
+  .yb-home-page .yb-home-hero .yb-hero-visual,
+  .yb-home-page .yb-home-hero .yb-hero-slider {
+    aspect-ratio: 16 / 9;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-title {
+    font-size: clamp(2.2rem, 5.2vw, 3rem);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .yb-home-page .yb-hero-shell {
+    padding-top: 32px;
+    padding-bottom: 34px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-title {
+    font-size: clamp(2.05rem, 7.6vw, 2.7rem);
+    line-height: 1.06;
+  }
+
+  /* The two CTAs sit side by side as long as their labels fit
+     (roughly 360px of content). They wrap to full-width rows
+     below that, in the 479.98px pass. */
+  .yb-home-page .yb-hero-shell .yb-hero-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn {
+    flex: 1 1 auto;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-copy {
+    font-size: 1rem;
+    line-height: 1.72;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-meta {
+    gap: 8px 18px;
+    font-size: 0.84rem;
+  }
+}
+
+/* Two CTAs plus their padding no longer fit at 480px, so they stack
+   into full-width rows instead of wrapping into an uneven pair. */
+@media (max-width: 479.98px) {
+  .yb-home-page .yb-hero-shell .yb-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn {
+    flex: 0 0 auto;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- Phones: shorter band -------------------------------------------- */
+
+@media (max-width: 575.98px) {
+  .yb-home-page .yb-home-hero .yb-hero-visual,
+  .yb-home-page .yb-home-hero .yb-hero-slider {
+    /* 16/10 rather than 16/9: on a tall phone 16/9 spends most
+       of the screen on imagery before any copy is reached. */
+    aspect-ratio: 16 / 10;
+  }
+
+  .yb-home-page .yb-hero-shell {
+    padding: 30px 0 32px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-title {
+    font-size: clamp(1.95rem, 8.4vw, 2.4rem);
+    margin-bottom: 14px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-copy {
+    margin-bottom: 24px;
+    font-size: 0.96rem;
+    line-height: 1.7;
+  }
+}
+
+/* --- Landscape phones: a 16/10 band eats the whole viewport ---------- */
+
+@media (max-height: 540px) and (orientation: landscape) {
+  .yb-home-page .yb-home-hero .yb-hero-visual,
+  .yb-home-page .yb-home-hero .yb-hero-slider {
+    aspect-ratio: 21 / 9;
+    max-height: 60vh;
+  }
+
+  .yb-home-page .yb-hero-shell {
+    padding-top: 26px;
+    padding-bottom: 28px;
+  }
+}
+
+/* =========================================
+   HOME HERO — EDITORIAL BOUTIQUE PASS
+   =========================================
+
+   WHAT THIS DOES
+   --------------
+   Replaces the old arrangement (a full-bleed image band with a
+   centred text block stacked underneath it) with a two-column
+   editorial spread: the copy in a narrower left rail, the carousel
+   in a slightly wider right column, both starting on the same
+   vertical line.
+
+   1. `.yb-hero-shell` IS the grid, and it carries the rail as a
+      margin. It also needs `max-width: none` - the centred layout
+      capped this box at 760px, and leaving that in place quietly
+      squashes the two columns into a narrow strip down the middle
+      of the page.
+
+   2. The plate is 16:9. The slides are 1672x941 (16:9) and two at
+      1774x887 (2:1), so 16:9 matches the first exactly and trims
+      only about 11% off the other two - the baked-in lettering and
+      the subject both stay in frame.
+
+   3. Copy is left-aligned rather than centred. Centring, plus the
+      dead space either side of it, was the main reason the section
+      read as a generic template landing page.
+
+   Scoped deliberately: nothing here touches the navbar, search,
+   cart, wishlist, product cards, the category section, or any other
+   home section. `.yb-btn` sizing and effects are inherited
+   untouched from the global button rules.
+
+   `.yb-eyebrow` is overridden for alignment only - its colour,
+   weight, tracking and case still come from the global rule.
+   ========================================= */
+
+.yb-home-page .yb-home-hero {
+  /* Distance between the copy column and the plate. Kept modest on
+     purpose: a wide gutter here reads as two unrelated blocks, while
+     too tight a one crowds the headline against the photograph. */
+  --yb-hero-col-gap: clamp(28px, 4.6vw, 68px);
+
+  padding-top: clamp(20px, 2.9vw, 42px);
+  padding-bottom: clamp(44px, 4.8vw, 68px);
+}
+
+/* --- The spread ---------------------------------------------------- */
+
+.yb-home-page .yb-hero-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: clamp(30px, 3.4vw, 46px);
+  /* `max-width` and `margin` are deliberately left alone: this element is
+     also a Bootstrap `.container`, and the container's own max-width and
+     `margin-inline: auto` are what align the hero's left edge with the
+     sections below. Overriding either here broke that alignment - the
+     cap removed put the copy against the viewport edge, and `margin: 0`
+     cancelled the centring. The inset comes from `padding-inline`
+     because a margin would overwrite the centring too. */
+  /* Horizontal inset now comes from padding, not margin: this element is
+     also a Bootstrap `.container`, and any margin here would overwrite
+     the `margin-inline: auto` that centres it - which is what actually
+     aligns the hero's left edge with the sections below.
+
+     These four steps mirror the category section's own
+     `padding-inline: max(calc(--yb-card-gap / 2 + --yb-split-x), 1.25rem)`
+     across the same breakpoints, so the two left edges stay locked
+     together instead of drifting a few pixels apart as the container
+     steps through its max-widths. Both sections share one gutter and
+     both follow Bootstrap's own container breakpoints. */
+  text-align: left;
+}
+
+/* Desktop: --yb-card-gap 2.5rem, --yb-split-x 0.25rem -> 1.5rem */
+.yb-home-page .yb-hero-shell {
+  padding-inline: 1.5rem;
+}
+
+@media (max-width: 1199.98px) {
+  .yb-home-page .yb-hero-shell {
+    padding-inline: 1.375rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .yb-home-page .yb-hero-shell {
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .yb-home-page .yb-hero-shell {
+    padding-inline: 1.25rem;
+  }
+}
+
+/* Grid children holding text or a media box must be allowed to
+   shrink, or a long unbroken string widens the grid past the
+   viewport. */
+.yb-home-page .yb-hero-shell > * {
+  min-width: 0;
+}
+
+/* --- The plate ----------------------------------------------------- */
+
+.yb-home-page .yb-hero-stage {
+  position: relative;
+}
+
+.yb-home-page .yb-home-hero .yb-hero-stage .yb-hero-visual {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* --- The track: slides side by side, moved as one -------------------
+
+   The base `.yb-hero-slide` rule stacks every slide with `position:
+   absolute` and crossfades it via `opacity`. That is exactly what a
+   track must not have: absolute slides all pile into the same box and
+   the translate moves nothing, and with no track height the images
+   collapse to zero and the plate renders as bare background. Both
+   properties are reset here and each slide is put back into normal
+   flow at exactly one track-width. */
+
+.yb-home-page .yb-home-hero .yb-hero-stage .yb-hero-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  /* Clips the neighbouring slides so only the active one shows. */
+  overflow: hidden;
+}
+
+.yb-home-page .yb-home-hero .yb-hero-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  will-change: transform;
+}
+
+.yb-home-page .yb-home-hero .yb-hero-track .yb-hero-slide {
+  position: static;
+  inset: auto;
+  opacity: 1;
+  /* The `0` in `flex: 0 0 100%` is what stops the slides shrinking to
+     fit; without it they compress and the percentages stop lining up
+     with one slide width. */
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  transition: none;
+}
+
+.yb-home-page .yb-home-hero .yb-hero-track .yb-hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* --- The copy ------------------------------------------------------ */
+
+.yb-home-page .yb-hero-shell .yb-eyebrow {
+  justify-content: flex-start;
+  margin-bottom: 14px;
+}
+
+/* The measure is left to the grid column on purpose: "Little
+   handmade things," has to stay on one line, and a `ch` cap here
+   is narrow enough to break it in two. */
+.yb-home-page .yb-hero-shell .yb-hero-title {
+  max-width: none;
+  margin-bottom: 18px;
+  font-size: clamp(2.1rem, 3.2vw, 3.35rem);
+  line-height: 1.06;
+  letter-spacing: -0.042em;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-copy {
+  max-width: 530px;
+  margin: 0 0 28px;
+  font-size: 1rem;
+  line-height: 1.72;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-actions {
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+/* Placement only. The arrow nudges inside the primary button; the
+   button's own colours, radius and shadow are untouched. */
+.yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn svg {
+  transition: transform 0.22s ease;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn:hover svg,
+.yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn:focus-visible svg {
+  transform: translateX(3px);
+}
+
+/* --- The value points ---------------------------------------------- */
+
+/* A single wrapping row at every width: one line of reassurance
+   under the CTAs rather than a list competing with the headline. */
+.yb-home-page .yb-hero-shell .yb-hero-meta {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 10px 26px;
+  padding-top: 0;
+  margin: 0;
+  border-top: 0;
+  font-size: 0.85rem;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-meta > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yb-home-page .yb-hero-shell .yb-hero-meta strong {
+  font-weight: 700;
+}
+
+/* --- Two columns --------------------------------------------------- */
+
+@media (min-width: 1024px) {
+  .yb-home-page .yb-hero-shell {
+    /* Near-equal columns. The plate is only fractionally wider, which
+       keeps the headline measure readable while still giving the
+       photograph the larger share of the composition. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
+    column-gap: var(--yb-hero-col-gap);
+    row-gap: clamp(26px, 2.8vw, 40px);
+    align-items: center;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-stage {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-lead {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  /* Sits under the copy in the left rail, sharing its left edge. */
+  .yb-home-page .yb-hero-shell .yb-hero-meta {
+    grid-row: 2;
+    grid-column: 1;
+    align-self: start;
+  }
+}
+
+/* --- Tablet --------------------------------------------------------- */
+
+@media (max-width: 1023.98px) {
+  .yb-home-page .yb-hero-shell {
+    text-align: left;
+  }
+
+  /* Single column reading plate -> copy -> values. */
+  .yb-home-page .yb-hero-shell .yb-hero-meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+/* --- Small tablets -------------------------------------------------- */
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .yb-home-page .yb-hero-shell .yb-hero-title {
+    max-width: none;
+    font-size: clamp(2.05rem, 3.4vw, 2.6rem);
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-copy {
+    max-width: 560px;
+    margin-bottom: 26px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .yb-home-page .yb-home-hero {
+    padding-top: 16px;
+    padding-bottom: 48px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-title {
+    max-width: none;
+    margin-bottom: 14px;
+    font-size: clamp(1.95rem, 6.4vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-copy {
+    max-width: 100%;
+    margin-bottom: 24px;
+    font-size: 0.97rem;
+    line-height: 1.7;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-meta {
+    font-size: 0.83rem;
+  }
+}
+
+/* --- Phones --------------------------------------------------------- */
+
+/* Both CTAs sit side by side while the labels fit, then wrap to
+   full-width rows below 480px rather than forming an uneven pair. */
+@media (max-width: 575.98px) {
+  .yb-home-page .yb-hero-shell {
+    row-gap: 24px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-title {
+    font-size: clamp(1.85rem, 8vw, 2.3rem);
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 479.98px) {
+  .yb-home-page .yb-hero-shell .yb-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn {
+    flex: 0 0 auto;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- Landscape phones: keep the whole hero on one screen ------------ */
+
+@media (max-height: 540px) and (orientation: landscape) {
+  .yb-home-page .yb-home-hero {
+    padding-top: 12px;
+    padding-bottom: 32px;
+  }
+
+  /* Side by side even this low, because stacked the plate alone
+     would fill the viewport. */
+  .yb-home-page .yb-hero-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    column-gap: 22px;
+    row-gap: 18px;
+    align-items: center;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-stage {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-lead {
+    grid-row: 1;
+    grid-column: 1;
+    align-self: auto;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-meta {
+    grid-row: 2;
+    grid-column: 1;
+    align-self: auto;
+    gap: 8px 14px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-title {
+    font-size: clamp(1.5rem, 3.6vw, 1.95rem);
+    margin-bottom: 10px;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-copy {
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+  }
+
+  .yb-home-page .yb-home-hero .yb-hero-stage .yb-hero-visual {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+/* --- Reduced motion -------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* No sliding, and no progress bar sweeping. */
+  .yb-home-page .yb-home-hero .yb-hero-track {
+    transition: none;
+  }
+
+  /* The hover nudge on the CTA arrow is decorative, so it is dropped
+     with everything else rather than left running for anyone who
+     has asked for less motion. */
+  .yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn svg {
+    transition: none;
+  }
+
+  .yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn:hover svg,
+  .yb-home-page .yb-hero-shell .yb-hero-actions .yb-btn:focus-visible svg {
+    transform: none;
+  }
+}
+
+/* =========================================
+   PRODUCT IMAGE HOVER
+   =========================================
+
+   Scoped to `.yb-product-card`, the card used by the homepage
+   featured row. The shop grid card (`.yb-shop-card`) is untouched.
+
+   Nothing here invents a new look. Every value below is lifted from a
+   hover the site already ships, so the card reacts the same way the
+   nav, the filter pills and the buttons do:
+
+     - 1px lift ..................... `.yb-btn:hover` (:304), the shared
+                                     card rule (:5290)
+     - dusty rose #dea5a4 ........... `.yb-nav-link:hover` (:2477),
+                                     `.yb-filter-pill:hover` (:3109)
+     - 0.18s-0.24s ease ............. the whole site. The previous pass
+                                     here ran 520-820ms with a gloss
+                                     sweep, which read as a plastic
+                                     "shine" and belonged to no other
+                                     control on the page
+     - no `filter`, no gradient ..... colour grading and white sweeps
+                                     appear nowhere else in the design
+
+   The image moves the least. `scale(1.04)` is barely more than the
+   1.025 the base rules already had, so it registers as the photo
+   settling rather than as an animation - the card's lift and the
+   type colour shift are what actually announce the hover.
+
+   `:focus-within` is treated as hover so the effect is not mouse
+   only: the card is a link, so tabbing onto its wishlist button
+   brings the same response.
+   ========================================= */
+
+/* --- The photo: one small, quick settle ---------------------------- */
+
+.yb-product-card .yb-product-image img {
+  transition: transform 0.24s ease;
+}
+
+/* --- The type ------------------------------------------------------- */
+
+/* Same colour move as a nav link (:2477) and the category line on the
+   card itself: brown to dusty rose. */
+.yb-product-card h3,
+.yb-product-card .yb-product-price {
+  transition: color 0.2s ease;
+}
+
+/* --- Hover / focus -------------------------------------------------- */
+
+@media (hover: hover) and (pointer: fine) {
+  /* The `.yb-home-page` prefix repeats the shape of the rule being
+     overridden: without it this selector is one pseudo-class short
+     and loses to it on the homepage. */
+  .yb-home-page .yb-product-card:hover .yb-product-image img,
+  .yb-product-card:hover .yb-product-image img,
+  .yb-product-card:focus-within .yb-product-image img {
+    transform: scale(1.04);
+    will-change: transform;
+  }
+
+  .yb-home-page .yb-product-card:hover h3,
+  .yb-product-card:hover h3,
+  .yb-product-card:focus-within h3 {
+    color: #dea5a4;
+  }
+}
+
+/* --- Reduced motion -------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The zoom is the only movement here and it is decorative, so it is
+     dropped rather than shortened. The colour shifts stay: they are
+     instant state feedback, not animation, and they still tell a
+     keyboard user which card they are on. */
+  .yb-product-card .yb-product-image img,
+  .yb-product-card:hover .yb-product-image img,
+  .yb-product-card:focus-within .yb-product-image img {
+    transform: none;
+    will-change: auto;
+  }
+
+  /* The arrow nudge on the trailing "View all products" link, dropped
+     for the same reason as the card zoom. The rose colour shift stays
+     because it is instant state feedback, not movement. */
+  .yb-inline-link svg {
+    transition: none;
+  }
+
+  .yb-inline-link:hover svg,
+  .yb-inline-link:focus-visible svg {
+    transform: none;
+  }
+}
+
+/* =========================================
+   MOODBOARD + CTA REFRESH
+   =========================================
+
+   Both blocks below restyle existing markup (`.yb-moment-*`, `.yb-cta-*`)
+   rather than adding new components. They are appended here, at the end of
+   the unlayered brand layer, so they win over the earlier definitions of the
+   same selectors further up this file - same reason the search skin lives in
+   its own stylesheet and is imported last.
+
+   THE MOODBOARD
+
+   Before: three equal cards in a row, each with a 120px flat strip of
+   artwork above a title. It read as a table of results.
+
+   First pass: a Pinterest collage, with three DIFFERENT image heights
+   offset from a shared baseline. That got the staggered feel but the cards
+   ended up visibly mismatched - different widths of art band, different
+   overall heights, titles landing on different lines - which read as
+   careless rather than intentional.
+
+   Now: three cards at ONE shared size. Same 3:2 art band, same copy block,
+   all sitting on one baseline. The cards are flex columns with `align-items:
+   stretch`, so the descriptions (which run to different line counts) cannot
+   make one card taller than its neighbours.
+
+   Style comes from the shared frame instead of from variation: equal
+   rounded corners, one consistent inner padding, a hairline separating art
+   from copy, and a single hover lift all three cards share. Every value
+   comes from tokens already in globals.css (--yb-pink, --yb-pink-soft,
+   --yb-brown, --yb-brown-light, --yb-cream-soft, --yb-green-soft). No new
+   colours.
+
+   The images were previously `background-image` on a fixed-height box, which
+   crops arbitrarily and gives the browser nothing to preload. They are real
+   `<img>` elements now with `aspect-ratio`, `object-fit: cover` and
+   `loading="lazy"` - so the images do not compete with the hero above them.
+
+   THE CTA
+
+   Before: a 1px-bordered strip with a very large heading and a dark button at
+   the far right, which on a wide screen left a long empty gap between them.
+
+   Now: the same panel, softer, with the heading and button grouped so they
+   stay visually paired at any width, plus two purely decorative background
+   layers (a dot field and a yarn squiggle). Both are pseudo elements pinned
+   behind the content, so they can never swallow a click.
+
+   CORNERS
+
+   `border-radius: 0` on `.yb-moment-shell`, `.yb-moment-card` and
+   `.yb-cta-shell` - every box in both sections is square-cornered, at every
+   breakpoint.
+
+   The earlier definitions further up this file still carry radii (10px, 12px,
+   14px, and the old 20px mobile override). They are left alone rather than
+   edited: this block is appended at the end of the unlayered brand layer, so
+   it wins on source order without touching rules other sections may rely on.
+   The `0` is explicit rather than omitted - a bare omission would leave the
+   older radius in force.
+
+   MOTION
+
+   The hover lift matches the rest of the site (1-3px, 0.22-0.24s ease) and is
+   dropped under `prefers-reduced-motion` along with the image settle.
+   ========================================= */
+
+/* --- Moodboard: the panel -------------------------------------------- */
+
+.yb-home-page .yb-moment-shell {
+  position: relative;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+  gap: clamp(24px, 3vw, 44px);
+  padding: clamp(26px, 3vw, 40px);
+  /* Square corners, per request. Was 26px. */
+  border-radius: 0;
+  border: 1px solid rgba(234, 219, 210, 0.9);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.92), rgba(253, 231, 239, 0.42));
+  box-shadow: 0 18px 46px rgba(90, 61, 53, 0.09);
+  overflow: hidden;
+}
+
+/* Two blurred colour washes. `filter: blur` on a large element is the single
+   most expensive thing in this block, so they are sized well beyond the panel
+   and blurred once at their final scale - browsers rasterise the blurred
+   result and do not re-run it on hover, since nothing here animates them. */
+.yb-home-page .yb-moment-blob {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(42px);
+}
+
+.yb-home-page .yb-moment-blob--pink {
+  top: -70px;
+  right: -40px;
+  width: 260px;
+  height: 260px;
+  background: rgba(247, 200, 216, 0.5);
+}
+
+.yb-home-page .yb-moment-blob--sage {
+  bottom: -90px;
+  left: 24%;
+  width: 220px;
+  height: 220px;
+  background: rgba(232, 239, 223, 0.75);
+}
+
+/* Everything real sits above the blobs. Without this the blobs, being later
+   positioned elements, would paint over the text. */
+.yb-home-page .yb-moment-text,
+.yb-home-page .yb-moment-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.yb-home-page .yb-moment-text p {
+  max-width: 46ch;
+  color: var(--yb-brown-light);
+  line-height: 1.75;
+}
+
+.yb-home-page .yb-moment-cta {
+  border-radius: 999px;
+}
+
+/* --- Moodboard: the collage ------------------------------------------ */
+
+.yb-home-page .yb-moment-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  /* `stretch` (the default, stated so it is not lost later): every card fills
+     the full row height, so all three end on the same baseline. The previous
+     `align-items: start` was what let the cards hang at different heights. */
+  align-items: stretch;
+}
+
+/* One shared frame for all three cards.
+
+   `display: flex` + `column` is what actually equalises them: the art band takes
+   its height from `aspect-ratio` and `flex: 0 0 auto` stops it being squeezed,
+   while the copy block below is `flex: 1` and so absorbs whatever height is
+   left over. The descriptions run to different line counts, so without this the
+   shorter one would leave its card shorter and the titles would sit on
+   different lines. */
+.yb-home-page .yb-moment-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  /* Square corners, per request. Was 18px. */
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(234, 219, 210, 0.95);
+  box-shadow: 0 10px 26px rgba(90, 61, 53, 0.09);
+  overflow: hidden;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+/* The image band. One ratio for every card - 3:2, which is the mildest crop
+   against the 1.78 and 2.0 landscape sources, so none of the three loses the
+   wordmark baked into its artwork. `flex: 0 0 auto` stops the flex column from
+   shrinking it when the copy block is taller. */
+.yb-home-page .yb-moment-art {
+  position: relative;
+  flex: 0 0 auto;
+  height: auto;
+  margin-bottom: 0;
+  aspect-ratio: 3 / 2;
+  border-radius: 0;
+  background: var(--yb-cream-soft);
+  overflow: hidden;
+}
+
+.yb-home-page .yb-moment-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.24s ease;
+}
+
+/* Small heart chip, top-right of the photo. Decorative only - the cards are
+   not links, so it is hidden from assistive tech in the markup. */
+.yb-home-page .yb-moment-pin {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #dea5a4;
+  box-shadow: 0 3px 10px rgba(90, 61, 53, 0.16);
+}
+
+/* `flex: 1` so the copy absorbs the leftover height, and `display: flex` +
+   `column` so the hairline sits at a fixed distance under the photo on all
+   three cards instead of floating at whatever height the text happens to end. */
+.yb-home-page .yb-moment-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 13px 15px 15px;
+  border-top: 1px solid rgba(234, 219, 210, 0.7);
+  background: linear-gradient(180deg, rgba(255, 250, 244, 0.7), rgba(255, 255, 255, 0));
+}
+
+.yb-home-page .yb-moment-card h3 {
+  margin: 0 0 5px;
+  font-size: 1.06rem;
+  line-height: 1.3;
+}
+
+.yb-home-page .yb-moment-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--yb-brown-light);
+}
+
+.yb-home-page .yb-moment-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 34px rgba(90, 61, 53, 0.13);
+}
+
+.yb-home-page .yb-moment-card:hover .yb-moment-art img {
+  transform: scale(1.05);
+}
+
+/* --- CTA: the panel --------------------------------------------------- */
+
+.yb-home-page .yb-cta-shell {
+  position: relative;
+  display: grid;
+  /* `auto auto` centred, not `1fr auto`: a 1fr text track pushes the button
+     hard against the right edge and leaves a wide dead gap between the two on a
+     desktop width. Two auto tracks centred keep the heading and the button
+     reading as one pair at any size, and both still shrink because both are
+     `minmax(0, auto)` - a `1fr` track is what forces the heading to fill. */
+  grid-template-columns: minmax(0, auto) minmax(0, auto);
+  justify-content: center;
+  align-items: center;
+  gap: clamp(18px, 3vw, 40px);
+  padding: clamp(26px, 3.4vw, 44px) clamp(24px, 3vw, 40px);
+  /* Square corners, per request. Was 26px. */
+  border-radius: 0;
+  border: 1px solid rgba(247, 200, 216, 0.75);
+  background:
+    radial-gradient(120% 140% at 8% 0%, rgba(253, 231, 239, 0.9), transparent 58%),
+    linear-gradient(105deg, rgba(255, 255, 255, 0.9), rgba(232, 239, 223, 0.62));
+  box-shadow: 0 14px 38px rgba(90, 61, 53, 0.08);
+  overflow: hidden;
+}
+
+/* Dot field. A `radial-gradient` tile rather than a background image or a
+   stack of DOM nodes - one declaration, no asset, and it repeats for free at
+   any panel size. */
+.yb-home-page .yb-cta-dots {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: radial-gradient(rgba(222, 165, 164, 0.5) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+  /* Only the top-left corner is dotted; the rest fades out so the texture
+     never competes with the heading. */
+  -webkit-mask-image: linear-gradient(125deg, #000, transparent 62%);
+  mask-image: linear-gradient(125deg, #000, transparent 62%);
+}
+
+/* A single yarn squiggle, bottom-right, drawn as an inline SVG data URI.
+   `currentColor` is not used here deliberately - the squiggle needs to stay
+   dusty rose over the sage half of the gradient, so the colour is fixed. */
+.yb-home-page .yb-cta-yarn {
+  position: absolute;
+  right: clamp(16px, 3vw, 56px);
+  /* Sits fully inside the panel. The shell has `overflow: hidden`, so any
+     negative bottom value would slice the squiggle's lower half off and leave
+     only the tops of the arches showing. */
+  bottom: 14px;
+  z-index: 0;
+  width: clamp(110px, 14vw, 170px);
+  height: 70px;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 78' fill='none' stroke='%23dea5a4' stroke-width='3' stroke-linecap='round'><path d='M4 58c14-26 28-26 42 0s28 26 42 0 28-26 42 0 28 26 42 0'/></svg>");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.yb-home-page .yb-cta-text {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.yb-home-page .yb-cta-text h2 {
+  margin: 0;
+  /* Was clamp(2rem, 4vw, 2.8rem), which at full width made the heading wider
+     than the text column beside it and left the button stranded at the far
+     right. Capped smaller so the line and the button read as one pair. */
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.yb-home-page .yb-cta-button {
+  position: relative;
+  z-index: 1;
+  border-radius: 999px;
+  padding: 12px 26px;
+  white-space: nowrap;
+}
+
+/* --- Responsive ------------------------------------------------------- */
+
+/* Below 991px the shell becomes a single column (existing rule at :2075), so
+   the staircase offsets have to be dropped - a staggered offset in a one-wide
+   stack is just misalignment. The collage also goes two-up here, which keeps
+   the images large enough to read. */
+@media (max-width: 991px) {
+  .yb-home-page .yb-moment-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Two up, so the three cards wrap as 2 + 1. */
+  .yb-home-page .yb-moment-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* The third card is alone on the second row. Letting it span keeps the row
+     from looking half-empty - and at this width the wide band suits the photo
+     better than the square-ish 3:2 would. This is the one place a card is
+     allowed a different shape, and it only ever applies to the orphan. */
+  .yb-home-page .yb-moment-card:nth-child(3) {
+    grid-column: span 2;
+  }
+
+  .yb-home-page .yb-moment-card:nth-child(3) .yb-moment-art {
+    aspect-ratio: 16 / 7;
+  }
+}
+
+@media (max-width: 575px) {
+  /* NOTE: this block used to re-set `border-radius: 20px` on both shells at
+     the mobile breakpoint. That is removed - the corners are square at every
+     width now, so re-adding a radius here would round them on phones only and
+     leave square corners on desktop.
+
+     The earlier rule at :2075 collapses `.yb-moment-shell` at 991px, but this
+     block re-declares `grid-template-columns` at the same breakpoint with the
+     `.yb-home-page` prefix attached. Same specificity class count, higher
+     source order, so it wins - which meant the two-column desktop layout
+     survived all the way down to 575px and squeezed the heading into a
+     ~180px column. Restated here so the mobile stack actually happens. */
+  .yb-home-page .yb-moment-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .yb-home-page .yb-cta-shell {
+    /* Single column too: `auto auto` centred cannot fit a full-width button
+       beside the heading, and the button needs the whole row on a phone. */
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .yb-home-page .yb-moment-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .yb-home-page .yb-moment-card:nth-child(3) {
+    grid-column: auto;
+  }
+
+  /* Back to the shared 3:2 once the cards are one per row - the wide band is
+     only there to fill a half-empty second row, and on a phone every card has
+     that row to itself. */
+  .yb-home-page .yb-moment-card:nth-child(3) .yb-moment-art {
+    aspect-ratio: 3 / 2;
+  }
+
+  .yb-home-page .yb-cta-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* The squiggle collides with a full-width button once it drops to its own
+     row, so it is hidden rather than moved. */
+  .yb-home-page .yb-cta-yarn {
+    display: none;
+  }
+}
+
+/* --- Reduced motion ---------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .yb-home-page .yb-moment-card,
+  .yb-home-page .yb-moment-card:hover,
+  .yb-home-page .yb-moment-art img,
+  .yb-home-page .yb-moment-card:hover .yb-moment-art img {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* =========================================
+   NAVBAR REFINEMENT
+   =========================================
+
+   Visual only. No markup, no behaviour, no ARIA and no routing touched - the
+   same buttons, links and handlers as before, restyled. Appended at the end of
+   the unlayered brand layer so it wins over the three earlier navbar passes
+   (base :98, shared refinement :2468, header pass :6703) without rewriting
+   them; those rules are shared with other components and are left intact.
+
+   WHAT WAS ACTUALLY WRONG
+
+   Measured in the browser at 1360px, signed in:
+
+     .yb-nav-action (cart/wishlist)  38 x 38, top 18
+     .yb-account-btn                 39 x 38, top 17   <- 1px taller
+     .yb-admin-btn                   38 x 38, top 18
+     .yb-logout-btn                  38 x 38, top 18
+     .yb-account-btn width          159px              <- vs 38px icons
+
+   Four separate problems, only one of which was a taste call:
+
+   1. OFF-BY-ONE ALIGNMENT. `.yb-account-btn` declares `min-height: 38px` AND
+      `border: 1px`, so it resolves to 39px and sits 1px higher than its
+      neighbours. Fixed with an explicit `height` rather than `min-height`, so
+      the border can no longer push the box past the row.
+
+   2. THE ACCOUNT CHIP DOMINATED. At 159px it was four times the width of the
+      icons beside it, purely because the display name is user-supplied. "Yarnberri
+      Admin" filled it; a longer name would have pushed the logout button off
+      the bar entirely. Capped with an ellipsis so the row's proportions hold
+      for any name.
+
+   3. INCONSISTENT SURFACES. `.yb-account-btn` and `.yb-logout-btn` carried a
+      solid `--yb-white` fill while the cart, wishlist and search controls
+      beside them were transparent with a hairline - so the logout button read
+      as a separate object floating in the row. All icon-only controls now share
+      one surface; text buttons keep a fill because they need the extra weight.
+
+   4. THE GREEN ADMIN CHIP. `--yb-green` at full strength is a saturated olive
+      sitting inside an otherwise pink-and-brown row, and it read as a foreign
+      object. Kept green - it usefully marks the admin role - but dropped to a
+      quiet tertiary so it supports the palette instead of interrupting it.
+
+   Also: the cart/wishlist badge now carries a ring in the header colour. It
+   previously sat as a solid brown blob partly over the icon glyph; the ring
+   separates the two so a count of 2 reads as a count, not as a smudge.
+
+   SCOPE NOTE
+
+   The account chip cap needs no markup change because `.yb-account-btn span`
+   (the name) is already a single inline element, so `text-overflow: ellipsis`
+   applies directly to it. If a name is ever rendered as multiple nodes the
+   ellipsis would silently stop working - worth remembering if that markup
+   changes.
+   ========================================= */
+
+/* --- One geometry for every control ------------------------------------ */
+
+/* Explicit `height`, not `min-height`: with a 1px border, `min-height: 38px`
+   resolves to a 39px box, which is the 1px misalignment this block removes. */
+.yb-header .yb-nav-action,
+.yb-header .yb-icon-btn,
+.yb-header .yb-logout-btn,
+.yb-header .yb-mobile-menu-btn,
+.yb-header .yb-login-btn,
+.yb-header .yb-account-btn,
+.yb-header .yb-admin-btn {
+  height: 38px;
+  min-height: 38px;
+  border-radius: 12px;
+}
+
+/* --- Icon-only controls: one shared surface ---------------------------- */
+
+/* These four carry only a glyph, so they get no fill - a background behind a
+   19px icon reads as a chip, and four chips in a row is what made the old bar
+   look busy. The hairline is kept: it is the only thing that aligns them to a
+   shared baseline, and dropping it entirely made the icons look adrift. */
+.yb-header .yb-nav-action,
+.yb-header .yb-icon-btn,
+.yb-header .yb-logout-btn,
+.yb-header .yb-mobile-menu-btn {
+  background: transparent;
+  border-color: rgba(90, 61, 53, 0.13);
+}
+
+/* --- Text buttons: a fill, so they outrank the icon controls ----------- */
+
+.yb-header .yb-account-btn {
+  position: relative;
+  /* A FIXED track, so every name - short or long - occupies the same space and
+     the row's proportions stay stable.
+
+     The three metrics below are sized together on purpose. Measured at 1360px,
+     "Yarnberri Admin" is 103px of text at 0.88rem; with 12px side padding, a 7px
+     gap and a 17px icon that needs a 149px chip to show in full - which is why a
+     naive shrink produced "Yarnberri ...". Trimming the type to 0.84rem
+     (~98px of text) and the side padding to 9px brings the requirement to
+     ~139px, so 146px fits the real name with room to spare and still ellipsises
+     anything longer. Shrinking the box and keeping the name legible are only
+     compatible if the box's own padding and type shrink with it.
+
+     The slack matters: at exactly the required width the browser rounds down and
+     the ellipsis appears anyway, so this is deliberately a few px over. */
+  width: 146px;
+  max-width: 146px;
+  padding: 8px 9px;
+  gap: 6px;
+  font-size: 0.84rem;
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(90, 61, 53, 0.15);
+}
+
+/* Without this the icon is a flex item and gets squeezed by the `flex: 1` name
+   next to it - it measured 16px against the 17px it is actually given, which
+   then left the name 1px short of fitting. */
+.yb-header .yb-account-btn > svg {
+  flex: 0 0 auto;
+}
+
+/* The name takes the slack, so the icon and the padding keep their space and
+   only the text truncates. */
+.yb-header .yb-account-btn span {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* A hairline divider in the gap before the account chip, so the icon cluster
+   and the identity controls read as two groups rather than one long queue.
+   `left: -7px` sits inside the ~9px header-actions gap. It is hidden on
+   phones, where the account control collapses to a bare icon and a divider
+   would be meaningless. */
+.yb-header .yb-account-btn::before {
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 1px;
+  height: 20px;
+  background: rgba(90, 61, 53, 0.14);
+  content: "";
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* --- Admin chip: green, but quiet -------------------------------------- */
+
+/* Still the green token, so the role stays legible at a glance - just at a
+   lower contrast that sits inside the pink/brown palette rather than on top
+   of it. */
+.yb-header .yb-admin-btn {
+  padding: 8px 14px;
+  background: rgba(232, 239, 223, 0.5);
+  border-color: rgba(113, 139, 88, 0.24);
+  color: #6b7f57;
+  font-weight: 600;
+}
+
+.yb-header .yb-admin-btn:hover {
+  background: rgba(232, 239, 223, 0.85);
+  border-color: rgba(113, 139, 88, 0.42);
+  color: #5f7350;
+}
+
+/* --- One hover, everywhere -------------------------------------------- */
+
+/* A single 1px lift and a single tint, so every control answers the pointer the
+   same way. The earlier passes mixed lifts, border-only changes and tint-only
+   changes, which is most of why the row felt assembled rather than designed. */
+.yb-header .yb-nav-action:hover,
+.yb-header .yb-icon-btn:hover,
+.yb-header .yb-logout-btn:hover,
+.yb-header .yb-mobile-menu-btn:hover,
+.yb-header .yb-login-btn:hover,
+.yb-header .yb-account-btn:hover {
+  background: rgba(222, 165, 164, 0.14);
+  border-color: rgba(222, 165, 164, 0.55);
+  color: var(--yb-brown);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(90, 61, 53, 0.07);
+}
+
+/* --- Badge: separated from the icon ------------------------------------ */
+
+/* Desktop only. The two existing phone overrides further up the file size the
+   badge down to 15px/0.6rem, and scoping this to >=992px leaves those
+   authoritative rather than fighting them. */
+@media (min-width: 992px) {
+  .yb-header .yb-cart-badge {
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 0.64rem;
+    font-weight: 700;
+    line-height: 1;
+    /* The ring is the fix: without it the solid badge merges into the icon
+       underneath and reads as a smudge on the glyph. */
+    box-shadow:
+      0 0 0 2.5px var(--yb-cream),
+      0 2px 6px rgba(90, 61, 53, 0.16);
+  }
+}
+
+/* --- Nav links: quieter underline -------------------------------------- */
+
+/* Same rose as every other hover on the site, at a lighter weight so the
+   resting state stays quiet and the active page is the only strong line. */
+.yb-header .yb-nav-link::after {
+  height: 1.5px;
+  background: rgba(222, 165, 164, 0.9);
+}
+
+.yb-header .yb-nav-link:hover {
+  color: var(--yb-brown);
+}
+
+.yb-header .yb-nav-link.active {
+  color: var(--yb-brown);
+}
+
+/* --- Phones: divider off, cap released, squares restored ------------- */
+
+@media (max-width: 991.98px) {
+  .yb-header .yb-account-btn::before {
+    display: none;
+  }
+
+  /* Below lg the account control collapses to a bare icon, so the fixed width
+     has to be released - it would fight the 34px square geometry, and the name
+     span is hidden at this width anyway. */
+  .yb-header .yb-account-btn {
+    width: auto;
+    max-width: none;
+  }
+
+  /* The desktop `height: 38px` above carries two class selectors, which
+     out-specifies the existing phone rules further up the file (they use a
+     single class, and a media query adds no specificity of its own). Without
+     these the controls measured 32 x 38 on a phone - squares stretched into
+     rectangles. Re-asserting the same 34px the earlier passes used. */
+  .yb-header .yb-nav-action,
+  .yb-header .yb-icon-btn,
+  .yb-header .yb-logout-btn,
+  .yb-header .yb-mobile-menu-btn,
+  .yb-header .yb-login-btn,
+  .yb-header .yb-account-btn,
+  .yb-header .yb-admin-btn {
+    height: 34px;
+    min-height: 34px;
+  }
+}
+
+@media (max-width: 479.98px) {
+  .yb-header .yb-nav-action,
+  .yb-header .yb-icon-btn,
+  .yb-header .yb-logout-btn,
+  .yb-header .yb-mobile-menu-btn,
+  .yb-header .yb-login-btn,
+  .yb-header .yb-account-btn,
+  .yb-header .yb-admin-btn {
+    height: 32px;
+    min-height: 32px;
+  }
+}
+
+/* --- Reduced motion --------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .yb-header .yb-nav-action:hover,
+  .yb-header .yb-icon-btn:hover,
+  .yb-header .yb-logout-btn:hover,
+  .yb-header .yb-mobile-menu-btn:hover,
+  .yb-header .yb-login-btn:hover,
+  .yb-header .yb-account-btn:hover {
+    transform: none;
+  }
+}
+
+/* =========================================
+   LOGOUT ALERT DIALOG
+   =========================================
+
+   Appearance for `src/components/ui/alert-dialog.jsx`. Read that file first -
+   it explains why Radix is kept for behaviour while every shadcn class was
+   dropped.
+
+   SCOPE
+
+   These selectors are NOT prefixed with `.yb-header` or `.yb-home-page`,
+   because Radix portals the overlay and the panel to `document.body`. They
+   are outside both of those subtrees, so a scoped rule would never match.
+
+   MOTION WITHOUT A PLUGIN
+
+   The generated component wanted `animate-in`, `fade-in-0`, `zoom-in-95` and
+   friends from `tailwindcss-animate`, which is not installed
+   (`tailwind.config.js` has `plugins: []`). So the enter/exit states are real
+   CSS transitions keyed off the `data-state` attribute Radix already sets.
+
+   The technique: the element is in its final resting state at all times, and
+   only the opacity/transform differ per state. That means the exit transition
+   is visible - which is the whole reason `data-state="closed"` is styled
+   separately instead of letting the element simply disappear. Transitions are
+   declared on the base rule, not inside the state rules, so a state change
+   animates rather than snapping.
+
+   COLOUR
+
+   Warm brown scrim instead of black/80: a neutral black overlay on a cream,
+   pink and brown page reads as a system alert rather than as Yarnberri. The
+   scrim is a low-opacity brown so the page reads as dimmed rather than
+   switched off.
+
+   Square corners, matching the rest of the current pass on this page.
+
+   STACKING
+
+   The header is `z-index: 1000` and the notification toasts are Bootstrap's
+   `.toast-container` at 1090. The overlay sits at 1040 so it clears the
+   header, and the panel at 1050 so it stays above its own overlay - while
+   leaving room for a toast to appear over the dialog if one is ever raised
+   from inside it.
+
+   FOCUS
+
+   Radix moves focus to the panel on open and restores it to the trigger on
+   close, and Cancel receives initial focus. No `:focus-visible` ring is added
+   here beyond the one every button on the site already has - the panel itself
+   is not focusable and needs no outline.
+   ========================================= */
+
+.yb-alert-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+  background: rgba(90, 61, 53, 0.42);
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+.yb-alert-overlay[data-state="closed"] {
+  opacity: 0;
+}
+
+.yb-alert-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1050;
+  /* 340px, down from 420. A confirm dialog for one irreversible-but-trivial
+     action does not need the width of a settings panel, and the narrower box
+     keeps the description on one line at the sizes below. `92vw` still governs
+     on a phone, where this is the only thing that decides the fit. */
+  width: min(92vw, 340px);
+  /* Centring is repeated inside EVERY `transform` state, including the
+     open/closed pair below - rather than declared once as a separate
+     `translate: -50% -50%`.
+
+     That is not a style preference, it is a build constraint. The CSS minifier
+     in this pipeline silently drops the independent `translate` property, so a
+     rule that split the two (centring via `translate`, animating via
+     `transform`) builds to a panel with no centring whatsoever: it renders with
+     its top-left corner pinned at exactly 50%/50% of the viewport, hanging off
+     the bottom-right. Repeating `translate(-50%, -50%)` in each `transform` is
+     redundant to write by hand, but it survives the build and still animates
+     the scale. Do not "simplify" this back into a separate declaration. */
+  transform: translate(-50%, -50%) scale(1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px 22px 18px;
+  border: 1px solid rgba(234, 219, 210, 0.95);
+  border-radius: 0;
+  background: var(--yb-cream);
+  color: var(--yb-brown);
+  box-shadow: 0 26px 60px rgba(90, 61, 53, 0.22);
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+
+.yb-alert-content[data-state="closed"] {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+.yb-alert-header {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+/* A small glyph chip beside the title rather than stacked above it. Stacked, it
+   cost 46px of height on its own - the single biggest chunk of the old panel.
+   In a row it costs nothing, because the title already has a line of its own.
+   Decorative: the title below carries the meaning. */
+.yb-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  background: var(--yb-pink-soft);
+  color: var(--yb-brown);
+}
+
+.yb-alert-title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.18rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--yb-brown);
+}
+
+/* The description is meant to stay on ONE line. `nowrap` + `overflow: hidden`
+   would clip it mid-word on a narrow screen, which is worse than wrapping, so
+   the copy is kept short enough to fit instead and the line-height is tightened
+   to match. Verified at 1360px and 360px. */
+.yb-alert-description {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--yb-brown-light);
+}
+
+.yb-alert-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(234, 219, 210, 0.8);
+}
+
+.yb-alert-cancel,
+.yb-alert-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.yb-alert-cancel {
+  background: transparent;
+  border-color: rgba(90, 61, 53, 0.18);
+  color: var(--yb-brown);
+}
+
+.yb-alert-cancel:hover {
+  background: rgba(90, 61, 53, 0.05);
+  border-color: rgba(90, 61, 53, 0.3);
+}
+
+/* Confirm. Solid brown, matching `.yb-btn-primary` elsewhere, so the same
+   gesture reads the same way on the page. */
+.yb-alert-action {
+  background: var(--yb-brown);
+  border-color: var(--yb-brown);
+  color: var(--yb-white);
+  box-shadow: 0 6px 16px rgba(90, 61, 53, 0.18);
+}
+
+.yb-alert-action:hover {
+  background: var(--yb-brown-light);
+  border-color: var(--yb-brown-light);
+  transform: translateY(-1px);
+}
+
+.yb-alert-cancel:focus-visible,
+.yb-alert-action:focus-visible {
+  outline: 2px solid rgba(222, 165, 164, 0.9);
+  outline-offset: 2px;
+}
+
+@media (max-width: 479.98px) {
+  .yb-alert-content {
+    padding: 22px 20px 18px;
+  }
+
+  /* Stacked, full-width actions. Side by side at 320px the two labels
+     ("Stay signed in", "Sign out") would each need to wrap. */
+  .yb-alert-footer {
+    flex-direction: column-reverse;
+  }
+
+  .yb-alert-cancel,
+  .yb-alert-action {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yb-alert-overlay,
+  .yb-alert-content {
+    transition: none;
+  }
+
+  /* `translate(-50%, -50%)` is KEPT here while the scale is dropped - unlike
+     the rest of the file, dropping the whole transform would de-centre the
+     panel. */
+  .yb-alert-content[data-state="closed"] {
+    transform: translate(-50%, -50%);
+  }
+
+  .yb-alert-action:hover {
+    transform: none;
+  }
+}
+
+/* =========================================
+   HOME PAGE - PHONE AND TABLET REPAIRS
+   =========================================
+
+   Everything below was found by MEASURING the built site in Chrome at 320,
+   390, 430, 768, 1024, 1280 and 1600px rather than by reading the
+   stylesheet, and every number below is an observed one.
+
+   There was no horizontal scroll and no broken images at any width. What
+   there WAS, at every phone width:
+
+   1. THE COLLECTION CARDS WERE 35px SQUARES WITH NO VISIBLE NAME.
+
+      `.yb-category-split-grid` is a six-across flex strip: each column is
+      `flex: 1 1 0` with `max-width: var(--yb-card-max)`, and
+      `--yb-card-max` floors at 60px below 768px. But `flex-shrink` wins over
+      `max-width`, so at 320px the row maths is (320 - 40 shell padding -
+      5x14 gap) / 6 = 35px per card. Measured: 35x35 at 320px, 47x47 at 390px.
+      Six 35px squares is not a usable grid.
+
+      Worse, and this is the part that makes it a genuine defect rather than
+      just an ugly one: the name lives on a SECOND panel that is painted
+      UNDER the opaque artwork panel (z-index 1 vs 2) and is only revealed
+      when the two separate on `:hover` / `:focus-visible`. A touch device
+      has neither. So on a phone the collections row rendered six unlabelled
+      35px images - no name, no affordance, nothing to tap but a speck.
+
+      Two fixes, because they are different problems:
+        - Narrow screens stop trying to fit six across and become a real grid.
+        - Touch devices stop hiding the name behind the artwork, at any width.
+
+   2. CAROUSEL DOTS WERE 7-8px. The visible dot can stay that small, but a
+      7px touch target is unhittable, so the hit area is grown with a
+      transparent pseudo element while the dot itself is untouched.
+
+   3. HERO ARROWS AND PRIMARY BUTTONS WERE 38-40px TALL, just under the 44px
+      platform minimum for touch. Raised on touch pointers only, so desktop
+      keeps the tighter geometry.
+
+   WHY A GRID AND NOT A HORIZONTAL SCROLLER
+
+   A scroll strip was the other option, and it was rejected on purpose: it
+   hides four of the six collections behind a swipe with no visual hint that
+   more exist, and it makes the row's height depend on scroll state. A
+   2- or 3-up grid shows everything, keeps every target a real size, and needs
+   no extra affordance.
+   ========================================= */
+
+/* --- 1a. Narrow screens: a real grid, not a squeezed strip -------------- */
+
+/* Two columns first. At 320px that is (320 - 40 - 12) / 2 = 134px cards -
+   nearly four times the previous 35px, and a comfortable target.
+
+   `display: grid` replaces the flex strip outright, so the columns stop being
+   six units sharing one line. `flex`/`max-width` are neutralised on the
+   wrappers because the old column rule would otherwise keep shrinking them. */
+@media (max-width: 600px) {
+  .yb-category-section .yb-category-split-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 16px;
+  }
+
+  .yb-category-section .yb-category-split-grid > [class*="col-"] {
+    flex: none;
+    width: auto;
+    max-width: none;
+    /* The old `margin-top` reserved room for the travelling panels. There is no
+       travelling panel here, so it becomes ordinary row spacing. */
+    margin-top: 0;
+  }
+}
+
+/* Three columns once a phone is wide enough that they stay legible: at 380px
+   that is ~112px per card, and the two-column version would be needlessly
+   oversized. */
+@media (min-width: 380px) and (max-width: 600px) {
+  .yb-category-section .yb-category-split-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Tablet portrait is the same story one step up: six across leaves ~106px
+   cards, which is usable but crowded, and the touch caption below still needs
+   room. Three columns gives ~210px cards at 768px. */
+@media (min-width: 601px) and (max-width: 991.98px) {
+  .yb-category-section .yb-category-split-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 16px;
+    row-gap: 20px;
+  }
+
+  .yb-category-section .yb-category-split-grid > [class*="col-"] {
+    flex: none;
+    width: auto;
+    max-width: none;
+    margin-top: 0;
+  }
+}
+
+/* --- 1b. Touch: the name is always visible ----------------------------- */
+
+/* Keyed on the POINTER, not the width. A 1024px iPad is wide enough for the
+   six-across strip and still has no hover, so a width-based rule would leave
+   the tablet in exactly the unlabelled state the phone was in.
+
+   The rear panel stops being a full-bleed hidden sheet and becomes a caption
+   pinned to the foot of the card, above the artwork, on a soft brand-coloured
+   scrim. Same DOM, same markup - only its geometry changes. */
+@media (hover: none), (pointer: coarse) {
+  .yb-category-section .yb-category-split-card__content {
+    top: auto;
+    bottom: 0;
+    height: auto;
+    z-index: 3;
+    align-items: flex-end;
+    padding: 26px 10px 9px;
+    border: 0;
+    background-color: transparent;
+    background-image: linear-gradient(
+      180deg,
+      rgba(255, 250, 244, 0) 0%,
+      rgba(255, 250, 244, 0.9) 48%,
+      rgba(255, 250, 244, 0.97) 100%
+    );
+    box-shadow: none;
+  }
+
+  .yb-category-section .yb-category-split-card__title {
+    font-size: 0.78rem;
+    /* Two lines at 0.78rem is enough for every current collection name and
+       stops a long one from growing the card unevenly. */
+    line-height: 1.2;
+  }
+
+  /* The split is switched off in the RESTING state, not merely on hover.
+
+     There is an existing rule that applies the travelling split permanently on
+     touch - `@media (hover:none)` sets a bare `translate3d` on both panels with
+     no pseudo-class, so the two are always apart and the name is always
+     visible. Cancelling it only on `:hover` / `:focus-visible` left that
+     resting offset in place: the artwork sat 18px high and the name 18px low,
+     i.e. `translateY(var(--yb-split-y))` outside the card's box, which cut the
+     caption in half against the card's bottom edge.
+
+     With the transform gone, both panels sit inside the card again and the
+     caption - which is already visible above the artwork - is what identifies
+     the collection. */
+  .yb-category-section .yb-category-split-card__image,
+  .yb-category-section .yb-category-split-card__content,
+  .yb-category-section .yb-category-split-card:hover .yb-category-split-card__image,
+  .yb-category-section .yb-category-split-card:hover .yb-category-split-card__content,
+  .yb-category-section .yb-category-split-card:focus-visible .yb-category-split-card__image,
+  .yb-category-section .yb-category-split-card:focus-visible .yb-category-split-card__content {
+    transform: none;
+  }
+
+  /* The artwork gets a little extra bottom inset so the subject is not sitting
+     under the caption's gradient. */
+  .yb-category-section .yb-category-split-card__artwork {
+    padding: 10% 10% 22%;
+  }
+}
+
+/* --- 2. Carousel dots: keep the dot, grow the target ------------------- */
+
+/* The dot stays 9px. `::after` is a transparent 44x44 box centred on it, which
+   makes the button's real hit area 44px without changing a single pixel of the
+   visible control - the pill behind the dots does not grow either, because the
+   pseudo element is not painted and does not affect layout.
+
+   `position: relative` on the dot anchors the pseudo element; without it the
+   overlay would position against the slider instead and every dot would share
+   one target. */
+.yb-slider-dot {
+  position: relative;
+}
+
+.yb-slider-dot::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+/* --- 3. Touch targets on phones and tablets ---------------------------- */
+
+/* 44px is the platform minimum for a comfortable tap. Applied on pointer
+   type only - a mouse does not need it, and desktop keeps its tighter rhythm. */
+
+@media (hover: none), (pointer: coarse) {
+  /* Scoped through `.yb-home-page`, matching the rule that actually sizes these
+     (:2755). A bare `.yb-slider-button` has lower specificity and loses to it,
+     which is why an earlier version of this rule silently did nothing - the
+     arrows stayed at 38px on exactly the devices that needed them bigger. */
+  .yb-home-page .yb-slider-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* The bigger arrows are nudged inward so their edges stay off the artwork. */
+  .yb-home-page .yb-slider-prev {
+    left: 10px;
+  }
+
+  .yb-home-page .yb-slider-next {
+    right: 10px;
+  }
+
+  /* The hero CTAs measured 40px tall. */
+  .yb-home-page .yb-hero-shell .yb-btn {
+    min-height: 44px;
+  }
+
+  /* "View all products" measured 24px tall - the full-height row is text-only
+     with a small arrow, so padding is the only thing to add. Negative margins
+     pull the extra padding back out so the heading above it does not shift. */
+  .yb-inline-link {
+    padding: 10px 2px;
+    margin-block: -10px;
+  }
+
+  /* Section eyebrow and chip labels are text, not controls, so they are left
+     alone - enlarging them would break the type rhythm for no benefit. */
+}
+
+/* --- 4. Long product names: clamp, don't crop -------------------------- */
+
+/* The featured card title is a 2-line clamp, but at 1024px a long name
+   overflowed its clamp box and was cut mid-glyph with no ellipsis, so the
+   card looked broken rather than truncated. `text-overflow: ellipsis` makes the
+   cut read as intentional. */
+.yb-product-card h3 {
+  text-overflow: ellipsis;
+}
+
+/* =========================================
+   HOME PAGE - FINAL POLISH
+   =========================================
+
+   Presentation only. No component, no prop, no handler and no markup changed -
+   every rule below restyles markup that already exists. Where the change is
+   visible on more than the home page, that is called out.
+
+   The brief was "professional e-commerce, but keep the cute Pinterest feel",
+   and those two pull against each other in one specific place: an e-commerce
+   grid reads as trustworthy because the products sit on quiet, even cards,
+   while the cute look comes from warmth and softness. The usual resolution -
+   flatten everything into neutral grey commerce chrome - would have cost the
+   brand entirely. So the warmth is kept and only the QUIET is added.
+
+   1. SECTION RHYTHM
+
+   Every section sat on the same unbroken cream, so the page read as one long
+   scroll with no landmarks and the eye had nothing to anchor against between
+   the collections, the featured row and the features. Alternating a barely
+   perceptible blush wash onto the middle band gives the page a scannable
+   cadence without a single hard edge or dividing rule - which is the cute-
+   friendly way to do it. A border or a colour block would have been the
+   corporate answer and would have fought the palette.
+
+   The tint is deliberately weak (0.4 alpha of the existing --yb-pink-soft).
+   Anything stronger stops being a texture and starts being a stripe.
+
+   2. FEATURED CARDS: RESTING DEPTH
+
+   The cards were a 1px border on a flat field, so the product row had no
+   separation from the page and read as slightly unfinished rather than crisp.
+   A soft two-part shadow - a tight contact shadow plus a wider ambient one -
+   lifts them off the cream without introducing the heavy drop shadow that
+   reads as dated. The hover lift already exists and is untouched.
+
+   3. THE WISHLIST BUTTON
+
+   This is the single harshest element on the page: a solid near-opaque cream
+   disc sitting on top of soft, low-contrast photography. It was the brightest,
+   highest-contrast thing in every card, which made it compete with the
+   product name for attention - the opposite of what a secondary action
+   should do.
+
+   Softened to a translucent chip with a hairline and a small shadow, so it
+   still separates from a pale photo but stops shouting. The saved state gains
+   a filled blush tint, which is what makes it read as ON rather than merely
+   pink.
+
+   NOTE: `.yb-product-wishlist-button` is shared with the shop grid and the
+   product detail page, so they all pick this up. That is deliberate - a
+   softer secondary control is an improvement on all three, and leaving the
+   home page different from the shop page would have been worse than either.
+
+   4. PRICE EMPHASIS
+
+   The price and the name were the same visual weight, so a shopper scanning
+   the row had no anchor. Lifting the price a little and tightening its
+   tracking makes the scan obvious without shouting - the price is the
+   decision point on a product card, so it should win the eye first.
+   ========================================= */
+
+/* --- 1. Section rhythm ------------------------------------------------- */
+
+/* The middle band of the page. Categories and the moodboard stay on the plain
+   cream, so the eye reads three cream / one blush / three cream rather than a
+   striped page. */
+.yb-home-page .yb-brand-section {
+  background: linear-gradient(
+    180deg,
+    rgba(253, 231, 239, 0.4) 0%,
+    rgba(253, 231, 239, 0.4) 100%
+  );
+}
+
+/* Feathered top and bottom edges instead of a hard start and stop. A linear
+   gradient with matching end colours has no visible boundary, which is what
+   keeps the wash reading as paper rather than as a band. */
+.yb-home-page .yb-featured-section {
+  background: linear-gradient(
+    180deg,
+    rgba(253, 231, 239, 0) 0%,
+    rgba(253, 231, 239, 0.4) 22%,
+    rgba(253, 231, 239, 0.4) 78%,
+    rgba(253, 231, 239, 0) 100%
+  );
+}
+
+/* --- 2. Featured card depth -------------------------------------------- */
+
+/* Two-part shadow: a tight one reads as contact with the surface, the wider
+   one as ambient light. One shadow alone has to choose between "floating" and
+   "stuck down" and gets neither. */
+.yb-home-page .yb-featured-section .yb-product-card {
+  box-shadow:
+    0 1px 2px rgba(90, 61, 53, 0.04),
+    0 8px 22px rgba(90, 61, 53, 0.06);
+  transition:
+    box-shadow 0.24s ease,
+    border-color 0.24s ease;
+}
+
+/* The existing hover rules already handle lift and the image zoom, so only the
+   shadow deepens here - deepening it on hover is what sells the lift. */
+.yb-home-page .yb-featured-section .yb-product-card:hover {
+  box-shadow:
+    0 2px 4px rgba(90, 61, 53, 0.05),
+    0 16px 34px rgba(90, 61, 53, 0.1);
+}
+
+/* --- 3. Wishlist button ------------------------------------------------ */
+
+/* Translucent rather than opaque: a pale photo shows through, so the chip
+   separates without becoming the brightest object in the card. */
+.yb-product-wishlist-button {
+  background: rgba(255, 250, 244, 0.78);
+  border-color: rgba(234, 219, 210, 0.85);
+  box-shadow: 0 3px 10px rgba(90, 61, 53, 0.09);
+  backdrop-filter: blur(6px);
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.yb-product-wishlist-button:hover,
+.yb-product-wishlist-button:focus-visible {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(222, 165, 164, 0.75);
+  box-shadow: 0 6px 16px rgba(90, 61, 53, 0.13);
+}
+
+/* Saved reads as ON: filled, not just tinted. The unfilled heart over a filled
+   blush chip is the same cue the navbar wishlist uses, so the two agree. */
+.yb-product-wishlist-button.is-saved {
+  background: var(--yb-pink-soft);
+  border-color: rgba(222, 165, 164, 0.6);
+  color: #b76e75;
+  box-shadow: 0 3px 10px rgba(222, 165, 164, 0.28);
+}
+
+/* --- 4. Price emphasis ------------------------------------------------ */
+
+/* A small step up, plus tighter tracking. Enough to lead the eye down the row
+   without making the price louder than the product name. */
+.yb-home-page .yb-featured-section .yb-product-price {
+  font-size: 1.12rem;
+  letter-spacing: -0.02em;
 }

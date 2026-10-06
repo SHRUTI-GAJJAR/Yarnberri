@@ -11,6 +11,16 @@ const formatPrice = (value) =>
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
 
+// Categories are stored as slugs (`hair-accessories`). Every other surface
+// already title-cases them, so the card does too rather than printing a
+// bare lowercase slug next to a Title Case product name.
+const formatCategory = (value) =>
+  String(value || 'Handmade')
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
 export default function FeaturedProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +101,7 @@ export default function FeaturedProducts() {
 
                       <div className="yb-product-meta">
                         <span>{product.stock > 0 ? `${product.stock} in stock` : 'Sold out'}</span>
-                        <span>{product.category?.replace(/-/g, ' ') || 'Handmade'}</span>
+                        <span>{formatCategory(product.category)}</span>
                       </div>
                     </div>
                   </Link>
